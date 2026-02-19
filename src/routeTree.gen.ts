@@ -9,8 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as CreateQuizRouteImport } from './routes/create-quiz'
 import { Route as IndexRouteImport } from './routes/index'
 
+const CreateQuizRoute = CreateQuizRouteImport.update({
+  id: '/create-quiz',
+  path: '/create-quiz',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -19,28 +25,39 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/create-quiz': typeof CreateQuizRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/create-quiz': typeof CreateQuizRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/create-quiz': typeof CreateQuizRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/create-quiz'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/create-quiz'
+  id: '__root__' | '/' | '/create-quiz'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CreateQuizRoute: typeof CreateQuizRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/create-quiz': {
+      id: '/create-quiz'
+      path: '/create-quiz'
+      fullPath: '/create-quiz'
+      preLoaderRoute: typeof CreateQuizRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -53,6 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CreateQuizRoute: CreateQuizRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

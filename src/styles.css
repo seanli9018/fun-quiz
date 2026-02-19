@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-background: oklch(var(--background));
+  --color-foreground: oklch(var(--foreground));
+  --color-card: oklch(var(--card));
+  --color-card-foreground: oklch(var(--card-foreground));
+  --color-popover: oklch(var(--popover));
+  --color-popover-foreground: oklch(var(--popover-foreground));
+  --color-primary: oklch(var(--primary));
+  --color-primary-foreground: oklch(var(--primary-foreground));
+  --color-secondary: oklch(var(--secondary));
+  --color-secondary-foreground: oklch(var(--secondary-foreground));
+  --color-muted: oklch(var(--muted));
+  --color-muted-foreground: oklch(var(--muted-foreground));
+  --color-accent: oklch(var(--accent));
+  --color-accent-foreground: oklch(var(--accent-foreground));
+  --color-destructive: oklch(var(--destructive));
+  --color-destructive-foreground: oklch(var(--destructive-foreground));
+  --color-border: oklch(var(--border));
+  --color-input: oklch(var(--input));
+  --color-ring: oklch(var(--ring));
+  --color-chart-1: oklch(var(--chart-1));
+  --color-chart-2: oklch(var(--chart-2));
+  --color-chart-3: oklch(var(--chart-3));
+  --color-chart-4: oklch(var(--chart-4));
+  --color-chart-5: oklch(var(--chart-5));
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  :root {
+    --background: 100% 0 0;
+    --foreground: 16.93% 0 0;
+    --card: 100% 0 0;
+    --card-foreground: 16.93% 0 0;
+    --popover: 100% 0 0;
+    --popover-foreground: 16.93% 0 0;
+    --primary: 25.53% 0 0;
+    --primary-foreground: 98.04% 0 0;
+    --secondary: 96.08% 0 0;
+    --secondary-foreground: 25.53% 0 0;
+    --muted: 96.08% 0 0;
+    --muted-foreground: 55.36% 0 0;
+    --accent: 96.08% 0 0;
+    --accent-foreground: 25.53% 0 0;
+    --destructive: 62.8% 0.238 29.234;
+    --destructive-foreground: 98.04% 0 0;
+    --border: 90.42% 0 0;
+    --input: 90.42% 0 0;
+    --ring: 16.93% 0 0;
+    --chart-1: 70.35% 0.151 36.548;
+    --chart-2: 61.04% 0.084 193.533;
+    --chart-3: 45.12% 0.078 222.584;
+    --chart-4: 77.87% 0.142 84.429;
+    --chart-5: 75.13% 0.166 43.023;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 16.93% 0 0;
+    --foreground: 98.04% 0 0;
+    --card: 16.93% 0 0;
+    --card-foreground: 98.04% 0 0;
+    --popover: 16.93% 0 0;
+    --popover-foreground: 98.04% 0 0;
+    --primary: 98.04% 0 0;
+    --primary-foreground: 25.53% 0 0;
+    --secondary: 35.84% 0 0;
+    --secondary-foreground: 98.04% 0 0;
+    --muted: 35.84% 0 0;
+    --muted-foreground: 68.74% 0 0;
+    --accent: 35.84% 0 0;
+    --accent-foreground: 98.04% 0 0;
+    --destructive: 38.33% 0.149 29.234;
+    --destructive-foreground: 98.04% 0 0;
+    --border: 35.84% 0 0;
+    --input: 35.84% 0 0;
+    --ring: 85.88% 0 0;
+    --chart-1: 58.41% 0.177 254.604;
+    --chart-2: 61.01% 0.096 179.624;
+    --chart-3: 69.23% 0.152 69.055;
+    --chart-4: 66.84% 0.139 302.321;
+    --chart-5: 67.54% 0.173 12.329;
+  }
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    @apply m-0 bg-background text-foreground;
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+code {
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}

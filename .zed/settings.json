@@ -1,0 +1,7 @@
+{
+  // Format on save
+  "format_on_save": "on",
+
+  // Set Prettier as the formatter
+  "formatter": "prettier",
+}

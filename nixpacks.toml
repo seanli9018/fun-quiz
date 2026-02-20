@@ -5,4 +5,4 @@ nixPkgs = ["nodejs_22"]
 cmds = ["npm install", "npm run build"]
 
 [start]
-cmd = "npm run start"
+cmd = "npm run db:migrate && npm run start"

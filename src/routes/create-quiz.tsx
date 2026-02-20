@@ -1,35 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
-import {
-  Field,
-  FieldGroup,
-  FieldSet,
-  FieldLegend,
-  FieldContent,
-  FieldLabel,
-} from '@/components/ui/Field';
-import { Label } from '@/components/ui/Label';
-import { Separator } from '@/components/ui/Separator';
-import { Trash2, Plus } from 'lucide-react';
+import { QuizInfoCard } from '@/components/quiz-info/QuizInfoCard';
+import { QuizQuestionsCard } from '@/components/quiz-questions/QuizQuestionsCard';
+import type { Question } from '@/components/quiz-questions/QuizQuestionsCard';
 
 export const Route = createFileRoute('/create-quiz')({
   component: CreateQuiz,
 });
-
-interface Answer {
-  id: string;
-  text: string;
-  isCorrect: boolean;
-}
-
-interface Question {
-  id: string;
-  text: string;
-  answers: Answer[];
-}
 
 interface QuizForm {
   title: string;
@@ -61,7 +39,7 @@ function CreateQuiz() {
     setQuiz((prev) => ({
       ...prev,
       questions: prev.questions.map((q) =>
-        q.id === questionId ? { ...q, text } : q
+        q.id === questionId ? { ...q, text } : q,
       ),
     }));
   };
@@ -69,7 +47,7 @@ function CreateQuiz() {
   const handleAnswerChange = (
     questionId: string,
     answerId: string,
-    text: string
+    text: string,
   ) => {
     setQuiz((prev) => ({
       ...prev,
@@ -78,18 +56,15 @@ function CreateQuiz() {
           ? {
               ...q,
               answers: q.answers.map((a) =>
-                a.id === answerId ? { ...a, text } : a
+                a.id === answerId ? { ...a, text } : a,
               ),
             }
-          : q
+          : q,
       ),
     }));
   };
 
-  const handleAnswerCorrectChange = (
-    questionId: string,
-    answerId: string
-  ) => {
+  const handleAnswerCorrectChange = (questionId: string, answerId: string) => {
     setQuiz((prev) => ({
       ...prev,
       questions: prev.questions.map((q) =>
@@ -99,16 +74,18 @@ function CreateQuiz() {
               answers: q.answers.map((a) =>
                 a.id === answerId
                   ? { ...a, isCorrect: !a.isCorrect }
-                  : { ...a, isCorrect: false }
+                  : { ...a, isCorrect: false },
               ),
             }
-          : q
+          : q,
       ),
     }));
   };
 
   const addQuestion = () => {
-    const newQuestionId = String(Math.max(...quiz.questions.map((q) => parseInt(q.id, 10)), 0) + 1);
+    const newQuestionId = String(
+      Math.max(...quiz.questions.map((q) => parseInt(q.id, 10)), 0) + 1,
+    );
     setQuiz((prev) => ({
       ...prev,
       questions: [
@@ -140,7 +117,7 @@ function CreateQuiz() {
       questions: prev.questions.map((q) => {
         if (q.id === questionId) {
           const newAnswerId = String(
-            Math.max(...q.answers.map((a) => parseInt(a.id, 10)), 0) + 1
+            Math.max(...q.answers.map((a) => parseInt(a.id, 10)), 0) + 1,
           );
           return {
             ...q,
@@ -197,179 +174,22 @@ function CreateQuiz() {
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Quiz Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Quiz Information</CardTitle>
-              <CardDescription>
-                Provide basic details about your quiz
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="quiz-title">Quiz Title *</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="quiz-title"
-                      placeholder="e.g., General Knowledge Trivia"
-                      value={quiz.title}
-                      onChange={(e) =>
-                        handleQuizChange('title', e.target.value)
-                      }
-                      required
-                    />
-                  </FieldContent>
-                </Field>
+          <QuizInfoCard
+            title={quiz.title}
+            description={quiz.description}
+            onChange={handleQuizChange}
+          />
 
-                <Field>
-                  <FieldLabel htmlFor="quiz-description">
-                    Description
-                  </FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="quiz-description"
-                      placeholder="Describe what this quiz is about"
-                      value={quiz.description}
-                      onChange={(e) =>
-                        handleQuizChange('description', e.target.value)
-                      }
-                    />
-                  </FieldContent>
-                </Field>
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          {/* Questions Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Questions</CardTitle>
-              <CardDescription>
-                Add questions with multiple answers
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-8">
-              {quiz.questions.map((question, questionIndex) => (
-                <div key={question.id} className="space-y-4 pb-6 border-b last:border-b-0 last:pb-0">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <FieldGroup>
-                        <Field>
-                          <FieldLabel htmlFor={`question-${question.id}`}>
-                            Question {questionIndex + 1} *
-                          </FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id={`question-${question.id}`}
-                              placeholder="Enter your question"
-                              value={question.text}
-                              onChange={(e) =>
-                                handleQuestionChange(question.id, e.target.value)
-                              }
-                              required
-                            />
-                          </FieldContent>
-                        </Field>
-                      </FieldGroup>
-                    </div>
-                    {quiz.questions.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        onClick={() => removeQuestion(question.id)}
-                        className="ml-2"
-                      >
-                        <Trash2 size={16} />
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Answers */}
-                  <div className="space-y-3 ml-4 border-l-2 border-muted pl-4">
-                    {question.answers.map((answer, answerIndex) => (
-                      <div
-                        key={answer.id}
-                        className="flex items-end gap-3"
-                      >
-                        <div className="flex-1">
-                          <Label className="text-xs mb-1 block">
-                            Answer {answerIndex + 1}
-                          </Label>
-                          <Input
-                            placeholder="Enter answer option"
-                            value={answer.text}
-                            onChange={(e) =>
-                              handleAnswerChange(
-                                question.id,
-                                answer.id,
-                                e.target.value
-                              )
-                            }
-                            required
-                            size="sm"
-                          />
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id={`correct-${question.id}-${answer.id}`}
-                            checked={answer.isCorrect}
-                            onChange={() =>
-                              handleAnswerCorrectChange(question.id, answer.id)
-                            }
-                            className="w-4 h-4 cursor-pointer"
-                          />
-                          <Label
-                            htmlFor={`correct-${question.id}-${answer.id}`}
-                            className="text-xs cursor-pointer whitespace-nowrap"
-                          >
-                            Correct
-                          </Label>
-                        </div>
-
-                        {question.answers.length > 2 && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              removeAnswer(question.id, answer.id)
-                            }
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addAnswer(question.id)}
-                      className="mt-2"
-                    >
-                      <Plus size={16} className="mr-1" />
-                      Add Answer
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addQuestion}
-              >
-                <Plus size={16} className="mr-2" />
-                Add Question
-              </Button>
-            </CardFooter>
-          </Card>
+          <QuizQuestionsCard
+            questions={quiz.questions}
+            onQuestionChange={handleQuestionChange}
+            onAnswerChange={handleAnswerChange}
+            onAnswerCorrectChange={handleAnswerCorrectChange}
+            onAddQuestion={addQuestion}
+            onRemoveQuestion={removeQuestion}
+            onAddAnswer={addAnswer}
+            onRemoveAnswer={removeAnswer}
+          />
 
           {/* Submit Section */}
           <div className="flex gap-4 justify-end">
@@ -393,3 +213,5 @@ function CreateQuiz() {
     </div>
   );
 }
+
+export default CreateQuiz;

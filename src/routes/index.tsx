@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/Button';
+import { useSession } from '@/lib/auth/client';
 
 export const Route = createFileRoute('/')({ component: App });
 
 function App() {
+  const { data: session } = useSession();
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
@@ -33,13 +36,20 @@ function App() {
           take quizzes created by other users and see how you stack up.
         </p>
 
-        <div className="flex flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link to="/create-quiz">
-            <Button variant="default" size="sm">
+            <Button variant="default" size="lg">
               Create Quiz
             </Button>
           </Link>
-          <Button variant="outline" size="sm">
+          {session?.user && (
+            <Link to="/dashboard">
+              <Button variant="outline" size="lg">
+                My Dashboard
+              </Button>
+            </Link>
+          )}
+          <Button variant="outline" size="lg">
             Take Quiz
           </Button>
         </div>

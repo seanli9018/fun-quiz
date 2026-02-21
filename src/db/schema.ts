@@ -1,4 +1,11 @@
-import { pgTable, text, timestamp, boolean } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  timestamp,
+  boolean,
+  integer,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -49,3 +56,104 @@ export const verification = pgTable('verification', {
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 });
+
+// Quiz tables
+export const quiz = pgTable('quiz', {
+  id: text('id').primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  isPublic: boolean('is_public').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const tag = pgTable('tag', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// Junction table for many-to-many relationship between quizzes and tags
+export const quizTag = pgTable('quiz_tag', {
+  id: text('id').primaryKey(),
+  quizId: text('quiz_id')
+    .notNull()
+    .references(() => quiz.id, { onDelete: 'cascade' }),
+  tagId: text('tag_id')
+    .notNull()
+    .references(() => tag.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const question = pgTable('question', {
+  id: text('id').primaryKey(),
+  quizId: text('quiz_id')
+    .notNull()
+    .references(() => quiz.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  order: integer('order').notNull(),
+  points: integer('points').notNull().default(1),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export const answer = pgTable('answer', {
+  id: text('id').primaryKey(),
+  questionId: text('question_id')
+    .notNull()
+    .references(() => question.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  isCorrect: boolean('is_correct').notNull().default(false),
+  order: integer('order').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Relations
+export const userRelations = relations(user, ({ many }) => ({
+  quizzes: many(quiz),
+  sessions: many(session),
+  accounts: many(account),
+}));
+
+export const quizRelations = relations(quiz, ({ one, many }) => ({
+  user: one(user, {
+    fields: [quiz.userId],
+    references: [user.id],
+  }),
+  quizTags: many(quizTag),
+  questions: many(question),
+}));
+
+export const tagRelations = relations(tag, ({ many }) => ({
+  quizTags: many(quizTag),
+}));
+
+export const quizTagRelations = relations(quizTag, ({ one }) => ({
+  quiz: one(quiz, {
+    fields: [quizTag.quizId],
+    references: [quiz.id],
+  }),
+  tag: one(tag, {
+    fields: [quizTag.tagId],
+    references: [tag.id],
+  }),
+}));
+
+export const questionRelations = relations(question, ({ one, many }) => ({
+  quiz: one(quiz, {
+    fields: [question.quizId],
+    references: [quiz.id],
+  }),
+  answers: many(answer),
+}));
+
+export const answerRelations = relations(answer, ({ one }) => ({
+  question: one(question, {
+    fields: [answer.questionId],
+    references: [question.id],
+  }),
+}));

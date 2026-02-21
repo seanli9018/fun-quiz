@@ -1,4 +1,5 @@
 import { Input } from '@/components/ui/Input';
+import { Checkbox } from '@/components/ui/Checkbox';
 import {
   Card,
   CardContent,
@@ -16,10 +17,18 @@ import {
 interface QuizInfoCardProps {
   title: string;
   description: string;
+  isPublic: boolean;
   onChange: (field: 'title' | 'description', value: string) => void;
+  onPublicChange: (isPublic: boolean) => void;
 }
 
-function QuizInfoCard({ title, description, onChange }: QuizInfoCardProps) {
+function QuizInfoCard({
+  title,
+  description,
+  isPublic,
+  onChange,
+  onPublicChange,
+}: QuizInfoCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -51,6 +60,22 @@ function QuizInfoCard({ title, description, onChange }: QuizInfoCardProps) {
                 onChange={(e) => onChange('description', e.target.value)}
               />
             </FieldContent>
+          </Field>
+
+          <Field>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="quiz-public"
+                checked={isPublic}
+                onCheckedChange={(checked) => onPublicChange(checked === true)}
+              />
+              <FieldLabel htmlFor="quiz-public" className="cursor-pointer">
+                Make this quiz public
+              </FieldLabel>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              Public quizzes can be discovered and taken by anyone
+            </p>
           </Field>
         </FieldGroup>
       </CardContent>

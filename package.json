@@ -18,7 +18,11 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx src/db/seed.ts",
+    "db:seed-quizzes": "tsx src/db/seed-quizzes-only.ts",
+    "db:verify-admin": "tsx src/db/verify-admin-quizzes.ts",
+    "db:get-admin-id": "tsx src/db/get-admin-id.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
@@ -55,6 +59,7 @@
     "drizzle-kit": "^0.31.9",
     "jsdom": "^27.0.0",
     "prettier": "^3.5.3",
+    "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vite": "^7.1.7",
     "vite-tsconfig-paths": "^5.1.4",

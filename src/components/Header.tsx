@@ -3,11 +3,11 @@ import { useState, useEffect } from 'react';
 import {
   Moon,
   Sun,
-  UserCircle,
   PenLine,
   BookOpen,
   LogOut,
   LogIn,
+  LayoutDashboard,
 } from 'lucide-react';
 import {
   NavigationMenu,
@@ -18,6 +18,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from '@/components/ui/NavigationMenu';
+import { Avatar, AvatarFallback } from '@/components/ui/Avatar';
 import { useSession, signOut } from '@/lib/auth/client';
 
 export default function Header() {
@@ -91,7 +92,7 @@ export default function Header() {
                   </li>
                   <li>
                     <NavigationMenuLink
-                      render={<Link to="/" />}
+                      render={<Link to="/take-quiz" />}
                       className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium hover:bg-muted transition-colors"
                     >
                       <BookOpen className="size-4 text-muted-foreground shrink-0" />
@@ -110,7 +111,7 @@ export default function Header() {
             {/* Contact */}
             <NavigationMenuItem>
               <NavigationMenuLink
-                render={<Link to="/" />}
+                render={<Link to="/contact" />}
                 className={navigationMenuTriggerStyle()}
               >
                 Contact
@@ -147,7 +148,11 @@ export default function Header() {
                   <NavigationMenuList>
                     <NavigationMenuItem>
                       <NavigationMenuTrigger className="gap-2 pl-2">
-                        <UserCircle className="size-5 shrink-0" />
+                        <Avatar size="sm">
+                          <AvatarFallback>
+                            {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                          </AvatarFallback>
+                        </Avatar>
                         <span className="text-sm font-medium max-w-28 truncate">
                           {session.user.name}
                         </span>
@@ -158,6 +163,15 @@ export default function Header() {
                             <div className="px-3 py-2 text-xs text-muted-foreground truncate border-b border-border mb-1">
                               {session.user.email}
                             </div>
+                          </li>
+                          <li>
+                            <NavigationMenuLink
+                              render={<Link to="/dashboard" />}
+                              className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                            >
+                              <LayoutDashboard className="size-4 text-muted-foreground shrink-0" />
+                              My Dashboard
+                            </NavigationMenuLink>
                           </li>
                           <li>
                             <button

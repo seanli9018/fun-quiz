@@ -1,9 +1,11 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { QuizInfoCard } from '@/components/quiz-info/QuizInfoCard';
 import { QuizQuestionsCard } from '@/components/quiz-questions/QuizQuestionsCard';
 import type { Question } from '@/components/quiz-questions/QuizQuestionsCard';
+import { useSession } from '@/lib/auth/client';
+import type { CreateQuizInput } from '@/db/types';
 
 export const Route = createFileRoute('/create-quiz')({
   component: CreateQuiz,
@@ -12,13 +14,20 @@ export const Route = createFileRoute('/create-quiz')({
 interface QuizForm {
   title: string;
   description: string;
+  isPublic: boolean;
   questions: Question[];
 }
 
 function CreateQuiz() {
+  const navigate = useNavigate();
+  const { data: session } = useSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [quiz, setQuiz] = useState<QuizForm>({
     title: '',
     description: '',
+    isPublic: true,
     questions: [
       {
         id: '1',
@@ -147,11 +156,99 @@ function CreateQuiz() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Quiz submitted:', quiz);
-    // TODO: Send quiz data to backend
-    alert('Quiz created! (Check console for data)');
+
+    // Check if user is authenticated
+    if (!session?.user) {
+      setError('You must be logged in to create a quiz');
+      return;
+    }
+
+    // Validate quiz data
+    if (!quiz.title.trim()) {
+      setError('Quiz title is required');
+      return;
+    }
+
+    if (quiz.questions.length === 0) {
+      setError('At least one question is required');
+      return;
+    }
+
+    // Validate each question has text and at least 2 answers with one correct
+    for (const question of quiz.questions) {
+      if (!question.text.trim()) {
+        setError('All questions must have text');
+        return;
+      }
+
+      if (question.answers.length < 2) {
+        setError('Each question must have at least 2 answers');
+        return;
+      }
+
+      const hasCorrectAnswer = question.answers.some((a) => a.isCorrect);
+      if (!hasCorrectAnswer) {
+        setError('Each question must have one correct answer');
+        return;
+      }
+
+      const allAnswersHaveText = question.answers.every((a) => a.text.trim());
+      if (!allAnswersHaveText) {
+        setError('All answers must have text');
+        return;
+      }
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Transform the quiz data to match the CreateQuizInput type
+      const quizInput: CreateQuizInput = {
+        title: quiz.title,
+        description: quiz.description || undefined,
+        isPublic: quiz.isPublic,
+        tagIds: [], // You can add tag selection UI later
+        questions: quiz.questions.map((q, index) => ({
+          text: q.text,
+          order: index + 1,
+          points: 10, // Default points, you can add UI for this later
+          answers: q.answers.map((a, answerIndex) => ({
+            text: a.text,
+            isCorrect: a.isCorrect,
+            order: answerIndex + 1,
+          })),
+        })),
+      };
+
+      // Call the API endpoint to create the quiz
+      const response = await fetch('/api/quiz/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(quizInput),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to create quiz');
+      }
+
+      if (result.success) {
+        // Navigate to the quiz detail page or home page
+        alert('Quiz created successfully!');
+        navigate({ to: '/' });
+      }
+    } catch (err) {
+      console.error('Error creating quiz:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create quiz');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -173,11 +270,30 @@ function CreateQuiz() {
           Design your custom quiz with questions and multiple-choice answers
         </p>
 
+        {!session?.user && (
+          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <p className="text-yellow-800 dark:text-yellow-200">
+              You must be logged in to create a quiz. Please sign in to
+              continue.
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
+            <p className="text-red-800 dark:text-red-200">{error}</p>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-8">
           <QuizInfoCard
             title={quiz.title}
             description={quiz.description}
+            isPublic={quiz.isPublic}
             onChange={handleQuizChange}
+            onPublicChange={(isPublic) =>
+              setQuiz((prev) => ({ ...prev, isPublic }))
+            }
           />
 
           <QuizQuestionsCard
@@ -197,15 +313,21 @@ function CreateQuiz() {
               type="button"
               variant="outline"
               onClick={() => window.history.back()}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="default"
-              disabled={!quiz.title || quiz.questions.some((q) => !q.text)}
+              disabled={
+                !session?.user ||
+                !quiz.title ||
+                quiz.questions.some((q) => !q.text) ||
+                isSubmitting
+              }
             >
-              Create Quiz
+              {isSubmitting ? 'Creating...' : 'Create Quiz'}
             </Button>
           </div>
         </form>

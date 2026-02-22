@@ -18,6 +18,7 @@ import { Route as ContactRouteImport } from './routes/contact'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiDebugSessionRouteImport } from './routes/api/debug-session'
 import { Route as QuizQuizIdTakeRouteImport } from './routes/quiz.$quizId.take'
+import { Route as ApiTagsSearchRouteImport } from './routes/api/tags/search'
 import { Route as ApiTagsListRouteImport } from './routes/api/tags/list'
 import { Route as ApiQuizUserQuizzesRouteImport } from './routes/api/quiz/user-quizzes'
 import { Route as ApiQuizPublicQuizzesRouteImport } from './routes/api/quiz/public-quizzes'
@@ -71,6 +72,11 @@ const QuizQuizIdTakeRoute = QuizQuizIdTakeRouteImport.update({
   path: '/quiz/$quizId/take',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTagsSearchRoute = ApiTagsSearchRouteImport.update({
+  id: '/api/tags/search',
+  path: '/api/tags/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTagsListRoute = ApiTagsListRouteImport.update({
   id: '/api/tags/list',
   path: '/api/tags/list',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/api/quiz/public-quizzes': typeof ApiQuizPublicQuizzesRoute
   '/api/quiz/user-quizzes': typeof ApiQuizUserQuizzesRoute
   '/api/tags/list': typeof ApiTagsListRoute
+  '/api/tags/search': typeof ApiTagsSearchRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/api/quiz/public-quizzes': typeof ApiQuizPublicQuizzesRoute
   '/api/quiz/user-quizzes': typeof ApiQuizUserQuizzesRoute
   '/api/tags/list': typeof ApiTagsListRoute
+  '/api/tags/search': typeof ApiTagsSearchRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/api/quiz/public-quizzes': typeof ApiQuizPublicQuizzesRoute
   '/api/quiz/user-quizzes': typeof ApiQuizUserQuizzesRoute
   '/api/tags/list': typeof ApiTagsListRoute
+  '/api/tags/search': typeof ApiTagsSearchRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/api/quiz/public-quizzes'
     | '/api/quiz/user-quizzes'
     | '/api/tags/list'
+    | '/api/tags/search'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/api/quiz/public-quizzes'
     | '/api/quiz/user-quizzes'
     | '/api/tags/list'
+    | '/api/tags/search'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
@@ -214,6 +225,7 @@ export interface FileRouteTypes {
     | '/api/quiz/public-quizzes'
     | '/api/quiz/user-quizzes'
     | '/api/tags/list'
+    | '/api/tags/search'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
@@ -233,6 +245,7 @@ export interface RootRouteChildren {
   ApiQuizPublicQuizzesRoute: typeof ApiQuizPublicQuizzesRoute
   ApiQuizUserQuizzesRoute: typeof ApiQuizUserQuizzesRoute
   ApiTagsListRoute: typeof ApiTagsListRoute
+  ApiTagsSearchRoute: typeof ApiTagsSearchRoute
   QuizQuizIdTakeRoute: typeof QuizQuizIdTakeRoute
   ApiQuizQuizIdSubmitRoute: typeof ApiQuizQuizIdSubmitRoute
   ApiQuizQuizIdTakeRoute: typeof ApiQuizQuizIdTakeRoute
@@ -303,6 +316,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QuizQuizIdTakeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tags/search': {
+      id: '/api/tags/search'
+      path: '/api/tags/search'
+      fullPath: '/api/tags/search'
+      preLoaderRoute: typeof ApiTagsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/tags/list': {
       id: '/api/tags/list'
       path: '/api/tags/list'
@@ -369,6 +389,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuizPublicQuizzesRoute: ApiQuizPublicQuizzesRoute,
   ApiQuizUserQuizzesRoute: ApiQuizUserQuizzesRoute,
   ApiTagsListRoute: ApiTagsListRoute,
+  ApiTagsSearchRoute: ApiTagsSearchRoute,
   QuizQuizIdTakeRoute: QuizQuizIdTakeRoute,
   ApiQuizQuizIdSubmitRoute: ApiQuizQuizIdSubmitRoute,
   ApiQuizQuizIdTakeRoute: ApiQuizQuizIdTakeRoute,

@@ -5,7 +5,7 @@ import { QuizInfoCard } from '@/components/quiz-info/QuizInfoCard';
 import { QuizQuestionsCard } from '@/components/quiz-questions/QuizQuestionsCard';
 import type { Question } from '@/components/quiz-questions/QuizQuestionsCard';
 import { useSession } from '@/lib/auth/client';
-import type { CreateQuizInput } from '@/db/types';
+import type { CreateQuizInput, Tag } from '@/db/types';
 
 export const Route = createFileRoute('/create-quiz')({
   component: CreateQuiz,
@@ -15,6 +15,7 @@ interface QuizForm {
   title: string;
   description: string;
   isPublic: boolean;
+  tags: Tag[];
   questions: Question[];
 }
 
@@ -28,6 +29,7 @@ function CreateQuiz() {
     title: '',
     description: '',
     isPublic: true,
+    tags: [],
     questions: [
       {
         id: '1',
@@ -205,12 +207,23 @@ function CreateQuiz() {
     setError(null);
 
     try {
+      // Process tags: pass tag IDs for existing tags and tag names for new tags
+      // The backend will handle creating new tags
+      const tagIds: string[] = quiz.tags.map((tag) => {
+        // If tag ID starts with 'temp-', it's a new tag, pass the name
+        if (tag.id.startsWith('temp-')) {
+          return tag.name;
+        }
+        // Otherwise, pass the existing tag ID
+        return tag.id;
+      });
+
       // Transform the quiz data to match the CreateQuizInput type
       const quizInput: CreateQuizInput = {
         title: quiz.title,
         description: quiz.description || undefined,
         isPublic: quiz.isPublic,
-        tagIds: [], // You can add tag selection UI later
+        tagIds,
         questions: quiz.questions.map((q, index) => ({
           text: q.text,
           order: index + 1,
@@ -290,10 +303,12 @@ function CreateQuiz() {
             title={quiz.title}
             description={quiz.description}
             isPublic={quiz.isPublic}
+            tags={quiz.tags}
             onChange={handleQuizChange}
             onPublicChange={(isPublic) =>
               setQuiz((prev) => ({ ...prev, isPublic }))
             }
+            onTagsChange={(tags) => setQuiz((prev) => ({ ...prev, tags }))}
           />
 
           <QuizQuestionsCard

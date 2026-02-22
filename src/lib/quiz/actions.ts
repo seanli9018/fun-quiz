@@ -1,6 +1,11 @@
 import { getRequestHeaders } from '@tanstack/react-start/server';
 import { auth } from '@/lib/auth/server';
-import { createQuiz, getAllTags, getQuizzes } from '@/db/repositories/quiz';
+import {
+  createQuiz,
+  getAllTags,
+  getQuizzes,
+  searchTags,
+} from '@/db/repositories/quiz';
 import type {
   CreateQuizInput,
   QuizFilters,
@@ -47,6 +52,21 @@ export async function getAllTagsAction() {
     console.error('Error fetching tags:', error);
     throw new Error(
       error instanceof Error ? error.message : 'Failed to fetch tags',
+    );
+  }
+}
+
+/**
+ * Search tags by name
+ */
+export async function searchTagsAction(searchTerm: string) {
+  try {
+    const tags = await searchTags(searchTerm);
+    return { success: true, tags };
+  } catch (error) {
+    console.error('Error searching tags:', error);
+    throw new Error(
+      error instanceof Error ? error.message : 'Failed to search tags',
     );
   }
 }

@@ -4,6 +4,8 @@ import { useSession } from '@/lib/auth/client';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import type { QuizWithRelations, Tag } from '@/db/types';
+import { formatCompletionCount } from '@/lib/utils';
+import { Users, TrendingUp } from 'lucide-react';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -350,6 +352,25 @@ function Dashboard() {
                     <span>•</span>
                     <span>{quiz.isPublic ? 'Public' : 'Private'}</span>
                   </div>
+
+                  {/* Popularity Stats */}
+                  {quiz.stats && quiz.stats.completionCount > 0 && (
+                    <div
+                      className="flex items-center gap-4 mb-4 text-sm"
+                      style={{ color: 'var(--color-muted-foreground)' }}
+                    >
+                      <span className="flex items-center gap-1">
+                        <Users className="size-3.5" />
+                        {formatCompletionCount(quiz.stats.completionCount)}{' '}
+                        taken
+                      </span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">
+                        <TrendingUp className="size-3.5" />
+                        {quiz.stats.averageScore}% avg
+                      </span>
+                    </div>
+                  )}
 
                   {/* Date */}
                   <div

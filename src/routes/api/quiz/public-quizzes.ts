@@ -10,17 +10,26 @@ export const Route = createFileRoute('/api/quiz/public-quizzes')({
           const page = parseInt(url.searchParams.get('page') || '1', 10);
           const limit = parseInt(url.searchParams.get('limit') || '10', 10);
           const search = url.searchParams.get('search') || undefined;
+          const excludeUserId =
+            url.searchParams.get('excludeUserId') || undefined;
           const tagIds = url.searchParams
             .get('tagIds')
             ?.split(',')
             .filter(Boolean);
+          const sortBy = url.searchParams.get('sortBy') as
+            | 'latest'
+            | 'popular'
+            | 'hardest'
+            | undefined;
 
           // Fetch only public quizzes
           const result = await getQuizzes(
             {
               isPublic: true,
               search,
+              excludeUserId,
               tagIds,
+              sortBy,
             },
             {
               page,

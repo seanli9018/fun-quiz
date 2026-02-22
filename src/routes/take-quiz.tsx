@@ -11,51 +11,121 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  X,
+  Users,
+  TrendingUp,
+  TrendingDown,
+  Flame,
+  Calendar,
 } from 'lucide-react';
-import type { QuizWithRelations, PaginatedResponse } from '@/db/types';
+import { useSession } from '@/lib/auth/client';
+import type { QuizWithRelations, PaginatedResponse, Tag } from '@/db/types';
+import { formatCompletionCount } from '@/lib/utils';
 
 export const Route = createFileRoute('/take-quiz')({
   component: TakeQuizPage,
 });
 
 function TakeQuizPage() {
-  const [quizzes, setQuizzes] = useState<QuizWithRelations[]>([]);
+  const { data: session } = useSession();
+  const [popularQuizzes, setPopularQuizzes] = useState<QuizWithRelations[]>([]);
+  const [hardestQuizzes, setHardestQuizzes] = useState<QuizWithRelations[]>([]);
+  const [latestQuizzes, setLatestQuizzes] = useState<QuizWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [showMorePopular, setShowMorePopular] = useState(false);
+  const [showMoreHardest, setShowMoreHardest] = useState(false);
   const limit = 9;
+  const previewLimit = 3;
+
+  // Fetch all tags
+  useEffect(() => {
+    async function fetchTags() {
+      try {
+        const response = await fetch('/api/tags/list');
+        if (!response.ok) {
+          throw new Error('Failed to fetch tags');
+        }
+        const result = await response.json();
+        if (result.success) {
+          setAllTags(result.tags);
+        }
+      } catch (err) {
+        console.error('Error fetching tags:', err);
+      }
+    }
+
+    fetchTags();
+  }, []);
 
   useEffect(() => {
-    fetchQuizzes();
-  }, [currentPage, search]);
+    fetchAllQuizzes();
+  }, [currentPage, search, selectedTags, showMorePopular, showMoreHardest]);
 
-  const fetchQuizzes = async () => {
+  const fetchAllQuizzes = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
+      // Helper to build params without undefined values
+      const buildParams = (extraParams: Record<string, string>) => {
+        const params: Record<string, string> = { ...extraParams };
+
+        if (search) params.search = search;
+        if (selectedTags.length > 0) params.tagIds = selectedTags.join(',');
+
+        return new URLSearchParams(params);
+      };
+
+      // Fetch popular quizzes
+      const popularParams = buildParams({
+        sortBy: 'popular',
+        limit: showMorePopular ? '12' : previewLimit.toString(),
+        page: '1',
+      });
+
+      // Fetch hardest quizzes
+      const hardestParams = buildParams({
+        sortBy: 'hardest',
+        limit: showMoreHardest ? '12' : previewLimit.toString(),
+        page: '1',
+      });
+
+      // Fetch latest quizzes with pagination
+      const latestParams = buildParams({
+        sortBy: 'latest',
         page: currentPage.toString(),
         limit: limit.toString(),
       });
 
-      if (search) {
-        params.append('search', search);
-      }
+      const [popularRes, hardestRes, latestRes] = await Promise.all([
+        fetch(`/api/quiz/public-quizzes?${popularParams}`),
+        fetch(`/api/quiz/public-quizzes?${hardestParams}`),
+        fetch(`/api/quiz/public-quizzes?${latestParams}`),
+      ]);
 
-      const response = await fetch(`/api/quiz/public-quizzes?${params}`);
-
-      if (!response.ok) {
+      if (!popularRes.ok || !hardestRes.ok || !latestRes.ok) {
         throw new Error('Failed to fetch quizzes');
       }
 
-      const data: PaginatedResponse<QuizWithRelations> = await response.json();
-      setQuizzes(data.data);
-      setTotalPages(data.pagination.totalPages);
-      setTotal(data.pagination.total);
+      const popularData: PaginatedResponse<QuizWithRelations> =
+        await popularRes.json();
+      const hardestData: PaginatedResponse<QuizWithRelations> =
+        await hardestRes.json();
+      const latestData: PaginatedResponse<QuizWithRelations> =
+        await latestRes.json();
+
+      setPopularQuizzes(popularData.data);
+      setHardestQuizzes(hardestData.data);
+      setLatestQuizzes(latestData.data);
+      setTotalPages(latestData.pagination.totalPages);
+      setTotal(latestData.pagination.total);
     } catch (err) {
       console.error('Error fetching quizzes:', err);
       setError(err instanceof Error ? err.message : 'Failed to load quizzes');
@@ -67,7 +137,7 @@ function TakeQuizPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
-    fetchQuizzes();
+    fetchAllQuizzes();
   };
 
   const handlePreviousPage = () => {
@@ -81,6 +151,29 @@ function TakeQuizPage() {
       setCurrentPage(currentPage + 1);
     }
   };
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tagId)
+        ? prev.filter((id) => id !== tagId)
+        : [...prev, tagId],
+    );
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSelectedTags([]);
+    setSearch('');
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = search.trim() || selectedTags.length > 0;
+  const displayedPopularQuizzes = showMorePopular
+    ? popularQuizzes
+    : popularQuizzes.slice(0, previewLimit);
+  const displayedHardestQuizzes = showMoreHardest
+    ? hardestQuizzes
+    : hardestQuizzes.slice(0, previewLimit);
 
   return (
     <div className="min-h-screen bg-background">
@@ -96,7 +189,7 @@ function TakeQuizPage() {
         </div>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="mb-8">
+        <form onSubmit={handleSearch} className="mb-6">
           <div className="relative max-w-2xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
             <Input
@@ -108,6 +201,52 @@ function TakeQuizPage() {
             />
           </div>
         </form>
+
+        {/* Tag Filters */}
+        {allTags.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-sm font-semibold text-foreground">
+                Filter by Tags
+              </h2>
+              {hasActiveFilters && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="gap-2 text-sm h-8"
+                >
+                  <X className="size-3" />
+                  Clear filters
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allTags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant={
+                    selectedTags.includes(tag.id) ? 'default' : 'outline'
+                  }
+                  render={
+                    <button
+                      onClick={() => toggleTag(tag.id)}
+                      className="cursor-pointer transition-all hover:scale-105"
+                    >
+                      {tag.name}
+                    </button>
+                  }
+                />
+              ))}
+            </div>
+            {selectedTags.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-2">
+                {selectedTags.length} tag{selectedTags.length > 1 ? 's' : ''}{' '}
+                selected
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && (
@@ -128,63 +267,157 @@ function TakeQuizPage() {
           </Card>
         )}
 
-        {/* Empty State */}
-        {!loading && !error && quizzes.length === 0 && (
-          <Card>
-            <CardContent className="pt-6 text-center py-12">
-              <Award className="size-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No quizzes found</h3>
-              <p className="text-muted-foreground">
-                {search
-                  ? 'Try adjusting your search terms'
-                  : 'No public quizzes available at the moment'}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Quiz Grid */}
-        {!loading && !error && quizzes.length > 0 && (
+        {/* Content Sections */}
+        {!loading && !error && (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {quizzes.map((quiz) => (
-                <QuizCard key={quiz.id} quiz={quiz} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4">
-                <Button
-                  variant="outline"
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 1}
-                  className="gap-2"
-                >
-                  <ChevronLeft className="size-4" />
-                  Previous
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    ({total} total)
-                  </span>
+            {/* Most Popular Section */}
+            {popularQuizzes.length > 0 && (
+              <section className="mb-12">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <Flame className="size-6 text-primary" />
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        Most Popular
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Quizzes with the most completions
+                      </p>
+                    </div>
+                  </div>
+                  {popularQuizzes.length > previewLimit && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowMorePopular(!showMorePopular)}
+                      className="gap-2"
+                    >
+                      {showMorePopular ? 'Show Less' : 'Show More'}
+                    </Button>
+                  )}
                 </div>
-
-                <Button
-                  variant="outline"
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                  className="gap-2"
-                >
-                  Next
-                  <ChevronRight className="size-4" />
-                </Button>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                  {displayedPopularQuizzes.map((quiz) => (
+                    <QuizCard key={quiz.id} quiz={quiz} />
+                  ))}
+                </div>
+              </section>
             )}
+
+            {/* Hardest Quizzes Section */}
+            {hardestQuizzes.length > 0 && (
+              <section className="mb-12">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-3">
+                    <TrendingDown className="size-6 text-primary" />
+                    <div>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        Hardest Quizzes
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Challenge yourself with the lowest scoring quizzes
+                      </p>
+                    </div>
+                  </div>
+                  {hardestQuizzes.length > previewLimit && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowMoreHardest(!showMoreHardest)}
+                      className="gap-2"
+                    >
+                      {showMoreHardest ? 'Show Less' : 'Show More'}
+                    </Button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                  {displayedHardestQuizzes.map((quiz) => (
+                    <QuizCard key={quiz.id} quiz={quiz} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Latest Quizzes Section */}
+            <section className="mb-8">
+              <div className="flex items-center gap-3 mb-2">
+                <Calendar className="size-6 text-primary" />
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">
+                    Latest Quizzes
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Recently created quizzes
+                  </p>
+                </div>
+              </div>
+
+              {latestQuizzes.length === 0 &&
+              popularQuizzes.length === 0 &&
+              hardestQuizzes.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center py-12">
+                    <Award className="size-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">
+                      No quizzes found
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {hasActiveFilters
+                        ? 'Try adjusting your search or filter criteria'
+                        : 'No public quizzes available at the moment'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : latestQuizzes.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center py-12">
+                    <p className="text-muted-foreground">
+                      No more quizzes to show
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-6">
+                    {latestQuizzes.map((quiz) => (
+                      <QuizCard key={quiz.id} quiz={quiz} />
+                    ))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-4">
+                      <Button
+                        variant="outline"
+                        onClick={handlePreviousPage}
+                        disabled={currentPage === 1}
+                        className="gap-2"
+                      >
+                        <ChevronLeft className="size-4" />
+                        Previous
+                      </Button>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          ({total} total)
+                        </span>
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className="gap-2"
+                      >
+                        Next
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
           </>
         )}
       </div>
@@ -195,6 +428,8 @@ function TakeQuizPage() {
 function QuizCard({ quiz }: { quiz: QuizWithRelations }) {
   const questionCount = quiz.questions.length;
   const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
+  const completionCount = quiz.stats?.completionCount || 0;
+  const averageScore = quiz.stats?.averageScore || 0;
 
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200">
@@ -234,6 +469,20 @@ function QuizCard({ quiz }: { quiz: QuizWithRelations }) {
             <span>{totalPoints} points</span>
           </div>
         </div>
+
+        {/* Popularity Stats */}
+        {completionCount > 0 && (
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="size-4" />
+              <span>{formatCompletionCount(completionCount)} taken</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <TrendingUp className="size-4" />
+              <span>{averageScore}% avg</span>
+            </div>
+          </div>
+        )}
 
         {/* Creator Info */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 pb-4 border-b border-border">

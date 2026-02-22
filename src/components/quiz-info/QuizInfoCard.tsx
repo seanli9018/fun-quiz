@@ -13,21 +13,27 @@ import {
   FieldContent,
   FieldLabel,
 } from '@/components/ui/Field';
+import { TagInput } from '@/components/tag-input/TagInput';
+import type { Tag } from '@/db/types';
 
 interface QuizInfoCardProps {
   title: string;
   description: string;
   isPublic: boolean;
+  tags: Tag[];
   onChange: (field: 'title' | 'description', value: string) => void;
   onPublicChange: (isPublic: boolean) => void;
+  onTagsChange: (tags: Tag[]) => void;
 }
 
 function QuizInfoCard({
   title,
   description,
   isPublic,
+  tags,
   onChange,
   onPublicChange,
+  onTagsChange,
 }: QuizInfoCardProps) {
   return (
     <Card>
@@ -59,6 +65,13 @@ function QuizInfoCard({
                 value={description}
                 onChange={(e) => onChange('description', e.target.value)}
               />
+            </FieldContent>
+          </Field>
+
+          <Field>
+            <FieldLabel htmlFor="quiz-tags">Tags</FieldLabel>
+            <FieldContent>
+              <TagInput selectedTags={tags} onTagsChange={onTagsChange} />
             </FieldContent>
           </Field>
 

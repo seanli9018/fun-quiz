@@ -1,5 +1,12 @@
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
-import type { quiz, tag, quizTag, question, answer } from './schema';
+import type {
+  quiz,
+  tag,
+  quizTag,
+  question,
+  answer,
+  quizAttempt,
+} from './schema';
 
 // Select types (for reading from database)
 export type Quiz = InferSelectModel<typeof quiz>;
@@ -7,6 +14,7 @@ export type Tag = InferSelectModel<typeof tag>;
 export type QuizTag = InferSelectModel<typeof quizTag>;
 export type Question = InferSelectModel<typeof question>;
 export type Answer = InferSelectModel<typeof answer>;
+export type QuizAttempt = InferSelectModel<typeof quizAttempt>;
 
 // Insert types (for inserting into database)
 export type QuizInsert = InferInsertModel<typeof quiz>;
@@ -14,6 +22,7 @@ export type TagInsert = InferInsertModel<typeof tag>;
 export type QuizTagInsert = InferInsertModel<typeof quizTag>;
 export type QuestionInsert = InferInsertModel<typeof question>;
 export type AnswerInsert = InferInsertModel<typeof answer>;
+export type QuizAttemptInsert = InferInsertModel<typeof quizAttempt>;
 
 // Extended types with relations
 export type QuizWithRelations = Quiz & {
@@ -27,6 +36,10 @@ export type QuizWithRelations = Quiz & {
   questions: (Question & {
     answers: Answer[];
   })[];
+  stats?: {
+    completionCount: number;
+    averageScore: number;
+  };
 };
 
 export type QuestionWithAnswers = Question & {
@@ -100,9 +113,11 @@ export type QuizResult = {
 // Filter and pagination types
 export type QuizFilters = {
   userId?: string;
+  excludeUserId?: string;
   tagIds?: string[];
   isPublic?: boolean;
   search?: string;
+  sortBy?: 'latest' | 'popular' | 'hardest';
 };
 
 export type PaginationParams = {
@@ -118,4 +133,10 @@ export type PaginatedResponse<T> = {
     total: number;
     totalPages: number;
   };
+};
+
+// Quiz statistics types
+export type QuizStats = {
+  completionCount: number;
+  averageScore: number;
 };

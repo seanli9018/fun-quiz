@@ -1,6 +1,6 @@
 import { db } from '../index';
 import { quiz, quizTag, question, answer, tag, user } from '../schema';
-import { eq, and, inArray, sql, desc, asc, or, like } from 'drizzle-orm';
+import { eq, and, inArray, sql, desc, asc, or, like, ne } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type {
   CreateQuizInput,
@@ -11,6 +11,7 @@ import type {
   PaginatedResponse,
   Quiz,
 } from '../types';
+import { getQuizStats, getMultipleQuizStats } from './quiz-attempts';
 
 /**
  * Create a new quiz with questions, answers, and tags
@@ -35,16 +36,60 @@ export async function createQuiz(
       })
       .returning();
 
-    // Create quiz-tag associations
+    // Process and create quiz-tag associations
     if (input.tagIds.length > 0) {
-      await tx.insert(quizTag).values(
-        input.tagIds.map((tagId) => ({
-          id: nanoid(),
-          quizId,
-          tagId,
-          createdAt: new Date(),
-        })),
-      );
+      const processedTagIds: string[] = [];
+
+      for (const tagIdOrName of input.tagIds) {
+        // Check if this is a tag ID (existing tag) or a tag name (new tag)
+        // If it doesn't look like a nanoid (contains spaces or special chars), treat it as a tag name
+        const isTagName =
+          tagIdOrName.includes(' ') ||
+          !/^[A-Za-z0-9_-]+$/.test(tagIdOrName) ||
+          tagIdOrName.length < 10;
+
+        if (isTagName) {
+          // This is a tag name, get or create the tag
+          const trimmedName = tagIdOrName.trim();
+
+          // Check if tag already exists (case-insensitive)
+          const existing = await tx
+            .select()
+            .from(tag)
+            .where(sql`LOWER(${tag.name}) = LOWER(${trimmedName})`)
+            .limit(1);
+
+          if (existing.length > 0) {
+            processedTagIds.push(existing[0].id);
+          } else {
+            // Create new tag
+            const [newTag] = await tx
+              .insert(tag)
+              .values({
+                id: nanoid(),
+                name: trimmedName,
+                createdAt: new Date(),
+              })
+              .returning();
+            processedTagIds.push(newTag.id);
+          }
+        } else {
+          // This is already a tag ID
+          processedTagIds.push(tagIdOrName);
+        }
+      }
+
+      // Create quiz-tag associations
+      if (processedTagIds.length > 0) {
+        await tx.insert(quizTag).values(
+          processedTagIds.map((tagId) => ({
+            id: nanoid(),
+            quizId,
+            tagId,
+            createdAt: new Date(),
+          })),
+        );
+      }
     }
 
     // Create questions
@@ -141,6 +186,9 @@ export async function getQuizById(
     }),
   );
 
+  // Get quiz statistics
+  const stats = await getQuizStats(quizId);
+
   return {
     id: quizRecord.id,
     title: quizRecord.title,
@@ -157,6 +205,7 @@ export async function getQuizById(
     },
     tags,
     questions: questionsWithAnswers,
+    stats,
   };
 }
 
@@ -167,7 +216,14 @@ export async function getQuizzes(
   filters: QuizFilters = {},
   pagination: PaginationParams = {},
 ): Promise<PaginatedResponse<QuizWithRelations>> {
-  const { userId, tagIds, isPublic, search } = filters;
+  const {
+    userId,
+    excludeUserId,
+    tagIds,
+    isPublic,
+    search,
+    sortBy = 'latest',
+  } = filters;
   const { page = 1, limit = 10 } = pagination;
   const offset = (page - 1) * limit;
 
@@ -176,6 +232,10 @@ export async function getQuizzes(
 
   if (userId) {
     conditions.push(eq(quiz.userId, userId));
+  }
+
+  if (excludeUserId) {
+    conditions.push(ne(quiz.userId, excludeUserId));
   }
 
   if (isPublic !== undefined) {
@@ -242,14 +302,106 @@ export async function getQuizzes(
 
   const total = Number(countResult[0]?.count || 0);
 
-  // Get paginated results
-  const quizzes = await baseQuery
-    .orderBy(desc(quiz.createdAt))
-    .limit(limit)
-    .offset(offset);
+  // Get paginated results with sorting
+  if (sortBy === 'popular') {
+    // For popularity sorting, we need to get all quizzes first
+    const allQuizzes = await baseQuery.orderBy(desc(quiz.createdAt));
 
-  // Fetch tags and questions for each quiz
-  const data = await Promise.all(
+    // Get stats for all quizzes
+    const quizIds = allQuizzes.map((q) => q.id);
+    const statsMap = await getMultipleQuizStats(quizIds);
+
+    // Add stats to quizzes and sort by completion count
+    const quizzesWithStatsArray = allQuizzes.map((quizItem) => ({
+      ...quizItem,
+      completionCount: statsMap.get(quizItem.id)?.completionCount || 0,
+      averageScore: statsMap.get(quizItem.id)?.averageScore || 0,
+    }));
+
+    quizzesWithStatsArray.sort((a, b) => b.completionCount - a.completionCount);
+
+    // Apply pagination after sorting
+    const paginatedQuizzes = quizzesWithStatsArray.slice(
+      offset,
+      offset + limit,
+    );
+
+    return {
+      data: await enrichQuizzesWithDetails(paginatedQuizzes, statsMap),
+      pagination: {
+        page,
+        limit,
+        total: quizzesWithStatsArray.length,
+        totalPages: Math.ceil(quizzesWithStatsArray.length / limit),
+      },
+    };
+  } else if (sortBy === 'hardest') {
+    // For hardest sorting, get all quizzes and filter by those with attempts
+    const allQuizzes = await baseQuery.orderBy(desc(quiz.createdAt));
+
+    // Get stats for all quizzes
+    const quizIds = allQuizzes.map((q) => q.id);
+    const statsMap = await getMultipleQuizStats(quizIds);
+
+    // Add stats to quizzes and filter out those without attempts
+    const quizzesWithStatsArray = allQuizzes.map((quizItem) => ({
+      ...quizItem,
+      completionCount: statsMap.get(quizItem.id)?.completionCount || 0,
+      averageScore: statsMap.get(quizItem.id)?.averageScore || 0,
+    }));
+
+    const quizzesWithAttempts = quizzesWithStatsArray.filter(
+      (q) => q.completionCount > 0,
+    );
+
+    // Sort by average score ascending (lowest score = hardest)
+    quizzesWithAttempts.sort((a, b) => a.averageScore - b.averageScore);
+
+    // Apply pagination after sorting and filtering
+    const paginatedQuizzes = quizzesWithAttempts.slice(offset, offset + limit);
+
+    return {
+      data: await enrichQuizzesWithDetails(paginatedQuizzes, statsMap),
+      pagination: {
+        page,
+        limit,
+        total: quizzesWithAttempts.length,
+        totalPages: Math.ceil(quizzesWithAttempts.length / limit),
+      },
+    };
+  } else {
+    // For latest, sort by createdAt in database
+    const quizzes = await baseQuery
+      .orderBy(desc(quiz.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    // Get statistics for all quizzes in this batch
+    const quizIds = quizzes.map((q) => q.id);
+    const statsMap = await getMultipleQuizStats(quizIds);
+
+    const data = await enrichQuizzesWithDetails(quizzes, statsMap);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+}
+
+/**
+ * Helper function to enrich quizzes with tags, questions, and stats
+ */
+async function enrichQuizzesWithDetails(
+  quizzes: any[],
+  statsMap: Map<string, { completionCount: number; averageScore: number }>,
+): Promise<QuizWithRelations[]> {
+  return await Promise.all(
     quizzes.map(async (quizRecord) => {
       const tags = await db
         .select({
@@ -298,19 +450,10 @@ export async function getQuizzes(
         },
         tags,
         questions: questionsWithAnswers,
+        stats: statsMap.get(quizRecord.id),
       };
     }),
   );
-
-  return {
-    data,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
 }
 
 /**
@@ -504,6 +647,56 @@ export async function deleteQuiz(
  */
 export async function getAllTags() {
   return await db.select().from(tag).orderBy(asc(tag.name));
+}
+
+/**
+ * Search tags by name (case-insensitive partial match)
+ */
+export async function searchTags(searchTerm: string) {
+  if (!searchTerm.trim()) {
+    return [];
+  }
+
+  return await db
+    .select()
+    .from(tag)
+    .where(like(tag.name, `%${searchTerm}%`))
+    .orderBy(asc(tag.name))
+    .limit(10);
+}
+
+/**
+ * Create a new tag or get existing tag by name
+ */
+export async function getOrCreateTag(name: string) {
+  const trimmedName = name.trim();
+
+  if (!trimmedName) {
+    throw new Error('Tag name cannot be empty');
+  }
+
+  // Check if tag already exists (case-insensitive)
+  const existing = await db
+    .select()
+    .from(tag)
+    .where(sql`LOWER(${tag.name}) = LOWER(${trimmedName})`)
+    .limit(1);
+
+  if (existing.length > 0) {
+    return existing[0];
+  }
+
+  // Create new tag
+  const [newTag] = await db
+    .insert(tag)
+    .values({
+      id: nanoid(),
+      name: trimmedName,
+      createdAt: new Date(),
+    })
+    .returning();
+
+  return newTag;
 }
 
 /**

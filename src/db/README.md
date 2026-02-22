@@ -5,160 +5,199 @@ This document describes the database schema for the Fun Quiz application.
 ## Overview
 
 The database consists of the following main entities:
+
 - **Users** - Authentication and user management
 - **Quizzes** - Quiz content and metadata
 - **Questions** - Individual questions within quizzes
 - **Answers** - Answer options for questions
 - **Tags** - Categories/tags for organizing quizzes
 - **Quiz Tags** - Many-to-many relationship between quizzes and tags
+- **Quiz Attempts** - Tracking of quiz completions and scores
 
 ## Tables
 
 ### User Tables (Authentication)
 
 #### `user`
+
 Stores user account information.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| name | text | User's display name |
-| email | text | User's email (unique) |
-| email_verified | boolean | Email verification status |
-| image | text | Profile image URL |
-| created_at | timestamp | Account creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| Column         | Type      | Description                |
+| -------------- | --------- | -------------------------- |
+| id             | text      | Primary key                |
+| name           | text      | User's display name        |
+| email          | text      | User's email (unique)      |
+| email_verified | boolean   | Email verification status  |
+| image          | text      | Profile image URL          |
+| created_at     | timestamp | Account creation timestamp |
+| updated_at     | timestamp | Last update timestamp      |
 
 #### `session`
+
 Manages user authentication sessions.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| expires_at | timestamp | Session expiration time |
-| token | text | Session token (unique) |
+| Column     | Type      | Description                |
+| ---------- | --------- | -------------------------- |
+| id         | text      | Primary key                |
+| expires_at | timestamp | Session expiration time    |
+| token      | text      | Session token (unique)     |
 | created_at | timestamp | Session creation timestamp |
-| updated_at | timestamp | Last update timestamp |
-| ip_address | text | IP address of session |
-| user_agent | text | Browser/client user agent |
-| user_id | text | Foreign key to `user` |
+| updated_at | timestamp | Last update timestamp      |
+| ip_address | text      | IP address of session      |
+| user_agent | text      | Browser/client user agent  |
+| user_id    | text      | Foreign key to `user`      |
 
 #### `account`
+
 Stores OAuth provider account information.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| account_id | text | Provider account ID |
-| provider_id | text | OAuth provider identifier |
-| user_id | text | Foreign key to `user` |
-| access_token | text | OAuth access token |
-| refresh_token | text | OAuth refresh token |
-| id_token | text | OAuth ID token |
-| access_token_expires_at | timestamp | Access token expiration |
-| refresh_token_expires_at | timestamp | Refresh token expiration |
-| scope | text | OAuth scope |
-| password | text | Hashed password (for email/password auth) |
-| created_at | timestamp | Account creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| Column                   | Type      | Description                               |
+| ------------------------ | --------- | ----------------------------------------- |
+| id                       | text      | Primary key                               |
+| account_id               | text      | Provider account ID                       |
+| provider_id              | text      | OAuth provider identifier                 |
+| user_id                  | text      | Foreign key to `user`                     |
+| access_token             | text      | OAuth access token                        |
+| refresh_token            | text      | OAuth refresh token                       |
+| id_token                 | text      | OAuth ID token                            |
+| access_token_expires_at  | timestamp | Access token expiration                   |
+| refresh_token_expires_at | timestamp | Refresh token expiration                  |
+| scope                    | text      | OAuth scope                               |
+| password                 | text      | Hashed password (for email/password auth) |
+| created_at               | timestamp | Account creation timestamp                |
+| updated_at               | timestamp | Last update timestamp                     |
 
 #### `verification`
+
 Stores verification tokens for email verification, password reset, etc.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| identifier | text | Email or user identifier |
-| value | text | Verification token |
-| expires_at | timestamp | Token expiration time |
+| Column     | Type      | Description              |
+| ---------- | --------- | ------------------------ |
+| id         | text      | Primary key              |
+| identifier | text      | Email or user identifier |
+| value      | text      | Verification token       |
+| expires_at | timestamp | Token expiration time    |
 | created_at | timestamp | Token creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| updated_at | timestamp | Last update timestamp    |
 
 ### Quiz Tables
 
 #### `quiz`
+
 Main quiz entity containing quiz metadata.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| title | text | Quiz title |
-| description | text | Quiz description (optional) |
-| user_id | text | Foreign key to `user` (creator) |
-| is_public | boolean | Whether quiz is publicly accessible |
-| created_at | timestamp | Quiz creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| Column      | Type      | Description                         |
+| ----------- | --------- | ----------------------------------- |
+| id          | text      | Primary key                         |
+| title       | text      | Quiz title                          |
+| description | text      | Quiz description (optional)         |
+| user_id     | text      | Foreign key to `user` (creator)     |
+| is_public   | boolean   | Whether quiz is publicly accessible |
+| created_at  | timestamp | Quiz creation timestamp             |
+| updated_at  | timestamp | Last update timestamp               |
 
 **Relations:**
+
 - Belongs to one `user` (creator)
 - Has many `questions`
 - Has many `tags` through `quiz_tag`
 
 #### `question`
+
 Individual questions within a quiz.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| quiz_id | text | Foreign key to `quiz` |
-| text | text | Question text |
-| order | integer | Display order within quiz |
-| points | integer | Points awarded for correct answer |
-| created_at | timestamp | Question creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| Column     | Type      | Description                       |
+| ---------- | --------- | --------------------------------- |
+| id         | text      | Primary key                       |
+| quiz_id    | text      | Foreign key to `quiz`             |
+| text       | text      | Question text                     |
+| order      | integer   | Display order within quiz         |
+| points     | integer   | Points awarded for correct answer |
+| created_at | timestamp | Question creation timestamp       |
+| updated_at | timestamp | Last update timestamp             |
 
 **Relations:**
+
 - Belongs to one `quiz`
 - Has many `answers`
 
 #### `answer`
+
 Answer options for questions (multiple choice).
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| question_id | text | Foreign key to `question` |
-| text | text | Answer text |
-| is_correct | boolean | Whether this is the correct answer |
-| order | integer | Display order within question |
-| created_at | timestamp | Answer creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| Column      | Type      | Description                        |
+| ----------- | --------- | ---------------------------------- |
+| id          | text      | Primary key                        |
+| question_id | text      | Foreign key to `question`          |
+| text        | text      | Answer text                        |
+| is_correct  | boolean   | Whether this is the correct answer |
+| order       | integer   | Display order within question      |
+| created_at  | timestamp | Answer creation timestamp          |
+| updated_at  | timestamp | Last update timestamp              |
 
 **Relations:**
+
 - Belongs to one `question`
 
 #### `tag`
+
 Categories/tags for organizing quizzes.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| name | text | Tag name (unique) |
+| Column     | Type      | Description            |
+| ---------- | --------- | ---------------------- |
+| id         | text      | Primary key            |
+| name       | text      | Tag name (unique)      |
 | created_at | timestamp | Tag creation timestamp |
 
 **Relations:**
+
 - Has many `quizzes` through `quiz_tag`
 
 #### `quiz_tag`
+
 Junction table for many-to-many relationship between quizzes and tags.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | text | Primary key |
-| quiz_id | text | Foreign key to `quiz` |
-| tag_id | text | Foreign key to `tag` |
+| Column     | Type      | Description                    |
+| ---------- | --------- | ------------------------------ |
+| id         | text      | Primary key                    |
+| quiz_id    | text      | Foreign key to `quiz`          |
+| tag_id     | text      | Foreign key to `tag`           |
 | created_at | timestamp | Association creation timestamp |
 
 **Relations:**
+
 - Belongs to one `quiz`
 - Belongs to one `tag`
+
+#### `quiz_attempt`
+
+Tracks quiz completions and scores for analytics and popularity metrics.
+
+| Column       | Type      | Description                                    |
+| ------------ | --------- | ---------------------------------------------- |
+| id           | text      | Primary key                                    |
+| quiz_id      | text      | Foreign key to `quiz`                          |
+| user_id      | text      | Foreign key to `user` (nullable for anonymous) |
+| score        | integer   | Points earned                                  |
+| max_score    | integer   | Maximum possible points                        |
+| percentage   | integer   | Score as percentage (0-100)                    |
+| completed_at | timestamp | Completion timestamp                           |
+
+**Relations:**
+
+- Belongs to one `quiz`
+- Belongs to one `user` (optional, allows anonymous attempts)
 
 ## Entity Relationships
 
 ```
 user (1) ──< (N) quiz (1) ──< (N) question (1) ──< (N) answer
-                  │
-                  └──< (N) quiz_tag (N) ──< (1) tag
+         │          │
+         │          ├──< (N) quiz_tag (N) ──< (1) tag
+         │          │
+         │          └──< (N) quiz_attempt
+         │
+         └──< (N) quiz_attempt
 ```
 
 ## Repository Functions
@@ -166,8 +205,8 @@ user (1) ──< (N) quiz (1) ──< (N) question (1) ──< (N) answer
 ### Quiz Operations (`src/db/repositories/quiz.ts`)
 
 - **`createQuiz(userId, input)`** - Create a new quiz with questions and tags
-- **`getQuizById(quizId)`** - Get a quiz with all relations (user, tags, questions, answers)
-- **`getQuizzes(filters, pagination)`** - Get quizzes with filters and pagination
+- **`getQuizById(quizId)`** - Get a quiz with all relations (user, tags, questions, answers, stats)
+- **`getQuizzes(filters, pagination)`** - Get quizzes with filters, pagination, and completion stats
 - **`updateQuiz(quizId, userId, input)`** - Update an existing quiz
 - **`deleteQuiz(quizId, userId)`** - Delete a quiz
 - **`getAllTags()`** - Get all available tags
@@ -179,16 +218,27 @@ user (1) ──< (N) quiz (1) ──< (N) question (1) ──< (N) answer
 - **`getQuizForTaking(quizId)`** - Get quiz questions without revealing correct answers
 - **`canAccessQuiz(quizId, userId?)`** - Check if a user can access a quiz
 
+### Quiz Attempts (`src/db/repositories/quiz-attempts.ts`)
+
+- **`saveQuizAttempt(quizId, userId, score, maxScore, percentage)`** - Save a quiz completion record
+- **`getQuizStats(quizId)`** - Get completion count and average score for a quiz
+- **`getMultipleQuizStats(quizIds)`** - Get stats for multiple quizzes efficiently
+- **`getQuizAttempts(quizId)`** - Get all attempts for a specific quiz
+- **`getUserAttempts(userId)`** - Get all attempts by a specific user
+- **`getUserBestAttempt(quizId, userId)`** - Get user's best score for a quiz
+- **`formatCompletionCount(count)`** - Format numbers as "10+", "100+", "1k+", etc.
+
 ## TypeScript Types
 
 All TypeScript types are defined in `src/db/types.ts`:
 
-- **Entity Types**: `Quiz`, `Question`, `Answer`, `Tag`, `QuizTag`
-- **Insert Types**: `QuizInsert`, `QuestionInsert`, etc.
-- **Extended Types**: `QuizWithRelations`, `QuestionWithAnswers`, etc.
+- **Entity Types**: `Quiz`, `Question`, `Answer`, `Tag`, `QuizTag`, `QuizAttempt`
+- **Insert Types**: `QuizInsert`, `QuestionInsert`, `QuizAttemptInsert`, etc.
+- **Extended Types**: `QuizWithRelations` (includes `stats`), `QuestionWithAnswers`, etc.
 - **Input Types**: `CreateQuizInput`, `UpdateQuizInput`
 - **Submission Types**: `QuizSubmission`, `QuizResult`
 - **Filter Types**: `QuizFilters`, `PaginationParams`, `PaginatedResponse`
+- **Stats Types**: `QuizStats` (completion count and average score)
 
 ## Seeding
 
@@ -208,6 +258,21 @@ This will populate the `tag` table with common quiz categories like Science, His
 - **`npm run db:studio`** - Open Drizzle Studio for database management
 - **`npm run db:seed`** - Seed initial data (tags)
 
+## Quiz Statistics & Popularity
+
+When a user completes a quiz, an attempt record is saved with their score. This enables:
+
+- **Completion Count**: Number of unique users who have taken the quiz (displayed as "10+", "100+", "1k+", etc.)
+- **Average Score**: Mean percentage score across all attempts
+- **User History**: Track individual user's quiz attempts and best scores
+
+Quiz cards automatically display these statistics to indicate popularity:
+
+- More completions = more popular quiz
+- Average score helps users gauge difficulty
+
+Anonymous users (not logged in) can still take quizzes, and their attempts are tracked without a `user_id`.
+
 ## Notes
 
 - All IDs use `nanoid` for generation
@@ -215,3 +280,6 @@ This will populate the `tag` table with common quiz categories like Science, His
 - The `quiz.is_public` field controls access: public quizzes can be viewed by anyone, private quizzes only by the creator
 - Questions and answers have `order` fields to maintain consistent display order
 - The `question.points` field allows different point values for different questions
+- Quiz attempts support anonymous completions (user_id is nullable)
+- Completion counts use DISTINCT to count unique users, preventing duplicate counting
+- Stats are calculated on-demand when fetching quizzes for optimal performance

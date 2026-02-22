@@ -1,17 +1,29 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { evaluateQuizSubmission, canAccessQuiz } from '@/db/repositories/quiz-evaluation';
+import {
+  evaluateQuizSubmission,
+  canAccessQuiz,
+} from '@/db/repositories/quiz-evaluation';
+import { saveQuizAttempt } from '@/db/repositories/quiz-attempts';
 import { auth } from '@/lib/auth/server';
 import type { QuizSubmission } from '@/db/types';
 
 export const Route = createFileRoute('/api/quiz/$quizId/submit')({
   server: {
     handlers: {
-      POST: async ({ request, params }: { request: Request; params: { quizId: string } }) => {
+      POST: async ({
+        request,
+        params,
+      }: {
+        request: Request;
+        params: { quizId: string };
+      }) => {
         try {
           const { quizId } = params;
 
           // Get session to check user access
-          const session = await auth.api.getSession({ headers: request.headers });
+          const session = await auth.api.getSession({
+            headers: request.headers,
+          });
           const userId = session?.user?.id;
 
           // Check if user can access this quiz
@@ -21,7 +33,8 @@ export const Route = createFileRoute('/api/quiz/$quizId/submit')({
             return new Response(
               JSON.stringify({
                 error: 'Access denied',
-                message: 'This quiz is not available or you do not have permission to access it',
+                message:
+                  'This quiz is not available or you do not have permission to access it',
               }),
               {
                 status: 403,
@@ -82,6 +95,20 @@ export const Route = createFileRoute('/api/quiz/$quizId/submit')({
                 },
               },
             );
+          }
+
+          // Save the quiz attempt to database
+          try {
+            await saveQuizAttempt(
+              quizId,
+              userId || null,
+              result.score,
+              result.maxScore,
+              result.percentage,
+            );
+          } catch (attemptError) {
+            // Log error but don't fail the request - user still gets their results
+            console.error('Failed to save quiz attempt:', attemptError);
           }
 
           return new Response(JSON.stringify(result), {

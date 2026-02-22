@@ -112,11 +112,25 @@ export const answer = pgTable('answer', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// Quiz attempt tracking - stores each completion of a quiz
+export const quizAttempt = pgTable('quiz_attempt', {
+  id: text('id').primaryKey(),
+  quizId: text('quiz_id')
+    .notNull()
+    .references(() => quiz.id, { onDelete: 'cascade' }),
+  userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+  score: integer('score').notNull(),
+  maxScore: integer('max_score').notNull(),
+  percentage: integer('percentage').notNull(),
+  completedAt: timestamp('completed_at').notNull().defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(user, ({ many }) => ({
   quizzes: many(quiz),
   sessions: many(session),
   accounts: many(account),
+  quizAttempts: many(quizAttempt),
 }));
 
 export const quizRelations = relations(quiz, ({ one, many }) => ({
@@ -126,6 +140,7 @@ export const quizRelations = relations(quiz, ({ one, many }) => ({
   }),
   quizTags: many(quizTag),
   questions: many(question),
+  attempts: many(quizAttempt),
 }));
 
 export const tagRelations = relations(tag, ({ many }) => ({
@@ -155,5 +170,16 @@ export const answerRelations = relations(answer, ({ one }) => ({
   question: one(question, {
     fields: [answer.questionId],
     references: [question.id],
+  }),
+}));
+
+export const quizAttemptRelations = relations(quizAttempt, ({ one }) => ({
+  quiz: one(quiz, {
+    fields: [quizAttempt.quizId],
+    references: [quiz.id],
+  }),
+  user: one(user, {
+    fields: [quizAttempt.userId],
+    references: [user.id],
   }),
 }));

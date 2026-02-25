@@ -49,9 +49,11 @@ function App() {
               </Button>
             </Link>
           )}
-          <Button variant="outline" size="lg">
-            Take Quiz
-          </Button>
+          <Link to="/take-quiz">
+            <Button variant="outline" size="lg">
+              Take Quiz
+            </Button>
+          </Link>
         </div>
       </div>
     </div>

@@ -1,26 +1,23 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import {
   Search,
-  Clock,
-  Award,
-  User,
   ChevronLeft,
   ChevronRight,
   X,
-  Users,
-  TrendingUp,
+  Award,
   TrendingDown,
   Flame,
   Calendar,
 } from 'lucide-react';
 import { useSession } from '@/lib/auth/client';
 import type { QuizWithRelations, PaginatedResponse, Tag } from '@/db/types';
-import { formatCompletionCount } from '@/lib/utils';
+import { QuizOverviewCard } from '@/components/quiz-overview-card';
+import { useDebounce } from '@/lib/hooks';
 
 export const Route = createFileRoute('/take-quiz')({
   component: TakeQuizPage,
@@ -34,6 +31,7 @@ function TakeQuizPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 300);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,8 +39,8 @@ function TakeQuizPage() {
   const [total, setTotal] = useState(0);
   const [showMorePopular, setShowMorePopular] = useState(false);
   const [showMoreHardest, setShowMoreHardest] = useState(false);
-  const limit = 9;
-  const previewLimit = 3;
+  const limit = 12;
+  const previewLimit = 4;
 
   // Fetch all tags
   useEffect(() => {
@@ -66,7 +64,13 @@ function TakeQuizPage() {
 
   useEffect(() => {
     fetchAllQuizzes();
-  }, [currentPage, search, selectedTags, showMorePopular, showMoreHardest]);
+  }, [
+    currentPage,
+    debouncedSearch,
+    selectedTags,
+    showMorePopular,
+    showMoreHardest,
+  ]);
 
   const fetchAllQuizzes = async () => {
     try {
@@ -77,7 +81,7 @@ function TakeQuizPage() {
       const buildParams = (extraParams: Record<string, string>) => {
         const params: Record<string, string> = { ...extraParams };
 
-        if (search) params.search = search;
+        if (debouncedSearch) params.search = debouncedSearch;
         if (selectedTags.length > 0) params.tagIds = selectedTags.join(',');
 
         return new URLSearchParams(params);
@@ -295,9 +299,9 @@ function TakeQuizPage() {
                     </Button>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                   {displayedPopularQuizzes.map((quiz) => (
-                    <QuizCard key={quiz.id} quiz={quiz} />
+                    <QuizOverviewCard key={quiz.id} quiz={quiz} />
                   ))}
                 </div>
               </section>
@@ -328,9 +332,9 @@ function TakeQuizPage() {
                     </Button>
                   )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                   {displayedHardestQuizzes.map((quiz) => (
-                    <QuizCard key={quiz.id} quiz={quiz} />
+                    <QuizOverviewCard key={quiz.id} quiz={quiz} />
                   ))}
                 </div>
               </section>
@@ -376,9 +380,9 @@ function TakeQuizPage() {
                 </Card>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6">
                     {latestQuizzes.map((quiz) => (
-                      <QuizCard key={quiz.id} quiz={quiz} />
+                      <QuizOverviewCard key={quiz.id} quiz={quiz} />
                     ))}
                   </div>
 
@@ -422,81 +426,5 @@ function TakeQuizPage() {
         )}
       </div>
     </div>
-  );
-}
-
-function QuizCard({ quiz }: { quiz: QuizWithRelations }) {
-  const questionCount = quiz.questions.length;
-  const totalPoints = quiz.questions.reduce((sum, q) => sum + q.points, 0);
-  const completionCount = quiz.stats?.completionCount || 0;
-  const averageScore = quiz.stats?.averageScore || 0;
-
-  return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <CardTitle className="text-xl line-clamp-2">{quiz.title}</CardTitle>
-        </div>
-
-        {/* Tags */}
-        {quiz.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
-            {quiz.tags.map((tag) => (
-              <Badge key={tag.id} variant="secondary" className="text-xs">
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
-        )}
-
-        {/* Description */}
-        {quiz.description && (
-          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
-            {quiz.description}
-          </p>
-        )}
-      </CardHeader>
-
-      <CardContent>
-        {/* Quiz Stats */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="size-4" />
-            <span>{questionCount} questions</span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Award className="size-4" />
-            <span>{totalPoints} points</span>
-          </div>
-        </div>
-
-        {/* Popularity Stats */}
-        {completionCount > 0 && (
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="size-4" />
-              <span>{formatCompletionCount(completionCount)} taken</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <TrendingUp className="size-4" />
-              <span>{averageScore}% avg</span>
-            </div>
-          </div>
-        )}
-
-        {/* Creator Info */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4 pb-4 border-b border-border">
-          <User className="size-3" />
-          <span>Created by {quiz.user.name}</span>
-        </div>
-
-        {/* Action Button */}
-        <Link to="/quiz/$quizId/take" params={{ quizId: quiz.id }}>
-          <Button className="w-full" size="lg">
-            Start Quiz
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
   );
 }

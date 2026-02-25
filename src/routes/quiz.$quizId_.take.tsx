@@ -13,7 +13,7 @@ import {
   Send,
 } from 'lucide-react';
 
-export const Route = createFileRoute('/quiz/$quizId/take')({
+export const Route = createFileRoute('/quiz/$quizId_/take')({
   component: TakeQuizPage,
 });
 

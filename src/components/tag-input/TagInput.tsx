@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/Badge';
+import { useDebounce } from '@/lib/hooks';
 import type { Tag } from '@/db/types';
 
 interface TagInputProps {
@@ -14,7 +15,9 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounce the input value
+  const debouncedInputValue = useDebounce(inputValue, 300);
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -31,22 +34,18 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search for tags
+  // Search for tags when debounced value changes
   useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    if (!inputValue.trim()) {
+    if (!debouncedInputValue.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
       return;
     }
 
     // Remove # prefix if present for search
-    const searchTerm = inputValue.startsWith('#')
-      ? inputValue.slice(1)
-      : inputValue;
+    const searchTerm = debouncedInputValue.startsWith('#')
+      ? debouncedInputValue.slice(1)
+      : debouncedInputValue;
 
     if (!searchTerm.trim()) {
       setSuggestions([]);
@@ -54,9 +53,8 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
       return;
     }
 
-    setIsLoading(true);
-
-    debounceTimerRef.current = setTimeout(async () => {
+    async function searchTags() {
+      setIsLoading(true);
       try {
         const response = await fetch(
           `/api/tags/search?q=${encodeURIComponent(searchTerm)}`,
@@ -78,14 +76,10 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
       } finally {
         setIsLoading(false);
       }
-    }, 300);
+    }
 
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [inputValue, selectedTags]);
+    searchTags();
+  }, [debouncedInputValue, selectedTags]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -122,7 +116,11 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
       setInputValue('');
       setSuggestions([]);
       setShowSuggestions(false);
-    } else if (e.key === 'Backspace' && !inputValue && selectedTags.length > 0) {
+    } else if (
+      e.key === 'Backspace' &&
+      !inputValue &&
+      selectedTags.length > 0
+    ) {
       // Remove last tag when backspace is pressed on empty input
       onTagsChange(selectedTags.slice(0, -1));
     }
@@ -180,7 +178,9 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
               setShowSuggestions(true);
             }
           }}
-          placeholder={selectedTags.length === 0 ? 'Add tags (e.g., #javascript)' : ''}
+          placeholder={
+            selectedTags.length === 0 ? 'Add tags (e.g., #javascript)' : ''
+          }
           className="flex-1 min-w-[120px] outline-none bg-transparent"
           style={{ color: 'var(--color-foreground)' }}
         />
@@ -236,8 +236,9 @@ export function TagInput({ selectedTags, onTagsChange }: TagInputProps) {
                 className="text-sm mt-1"
                 style={{ color: 'var(--color-foreground)' }}
               >
-                Press <kbd className="px-1 py-0.5 text-xs border rounded">Enter</kbd> to
-                create "
+                Press{' '}
+                <kbd className="px-1 py-0.5 text-xs border rounded">Enter</kbd>{' '}
+                to create "
                 {inputValue.startsWith('#')
                   ? inputValue.slice(1).trim()
                   : inputValue.trim()}

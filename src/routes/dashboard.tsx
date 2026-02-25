@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/Badge';
 import type { QuizWithRelations, Tag } from '@/db/types';
 import { formatCompletionCount } from '@/lib/utils';
 import { Users, TrendingUp } from 'lucide-react';
+import { useDebounce } from '@/lib/hooks';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -33,6 +34,7 @@ function Dashboard() {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -76,8 +78,8 @@ function Dashboard() {
           params.append('tagIds', selectedTags.join(','));
         }
 
-        if (searchQuery.trim()) {
-          params.append('search', searchQuery.trim());
+        if (debouncedSearchQuery.trim()) {
+          params.append('search', debouncedSearchQuery.trim());
         }
 
         const response = await fetch(`/api/quiz/user-quizzes?${params}`);
@@ -102,7 +104,7 @@ function Dashboard() {
     }
 
     fetchQuizzes();
-  }, [session, isPending, selectedTags, searchQuery, currentPage]);
+  }, [session, isPending, selectedTags, debouncedSearchQuery, currentPage]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTags((prev) =>
@@ -382,16 +384,24 @@ function Dashboard() {
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <a href={`/quiz/${quiz.id}`} className="flex-1">
+                    <Link
+                      to="/quiz/$quizId"
+                      params={{ quizId: quiz.id }}
+                      className="flex-1"
+                    >
                       <Button variant="default" size="sm" className="w-full">
                         View
                       </Button>
-                    </a>
-                    <a href={`/quiz/${quiz.id}/edit`} className="flex-1">
+                    </Link>
+                    <Link
+                      to="/quiz/$quizId/edit"
+                      params={{ quizId: quiz.id }}
+                      className="flex-1"
+                    >
                       <Button variant="outline" size="sm" className="w-full">
                         Edit
                       </Button>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               ))}

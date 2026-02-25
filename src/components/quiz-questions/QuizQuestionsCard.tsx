@@ -28,11 +28,13 @@ interface Question {
   id: string;
   text: string;
   answers: Answer[];
+  points: number;
 }
 
 interface QuizQuestionsCardProps {
   questions: Question[];
   onQuestionChange: (questionId: string, text: string) => void;
+  onPointsChange: (questionId: string, points: number) => void;
   onAnswerChange: (questionId: string, answerId: string, text: string) => void;
   onAnswerCorrectChange: (questionId: string, answerId: string) => void;
   onAddQuestion: () => void;
@@ -44,6 +46,7 @@ interface QuizQuestionsCardProps {
 function QuizQuestionsCard({
   questions,
   onQuestionChange,
+  onPointsChange,
   onAnswerChange,
   onAnswerCorrectChange,
   onAddQuestion,
@@ -63,7 +66,7 @@ function QuizQuestionsCard({
             key={question.id}
             className="space-y-4 pb-6 border-b last:border-b-0 last:pb-0"
           >
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <FieldGroup>
                   <Field>
@@ -84,13 +87,37 @@ function QuizQuestionsCard({
                   </Field>
                 </FieldGroup>
               </div>
+              <div className="w-24">
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor={`points-${question.id}`}>
+                      Points
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id={`points-${question.id}`}
+                        type="number"
+                        min="1"
+                        value={question.points}
+                        onChange={(e) =>
+                          onPointsChange(
+                            question.id,
+                            parseInt(e.target.value) || 1,
+                          )
+                        }
+                        required
+                      />
+                    </FieldContent>
+                  </Field>
+                </FieldGroup>
+              </div>
               {questions.length > 1 && (
                 <Button
                   type="button"
                   variant="destructive"
                   size="icon"
                   onClick={() => onRemoveQuestion(question.id)}
-                  className="ml-2"
+                  className="mt-6"
                 >
                   <Trash2 size={16} />
                 </Button>

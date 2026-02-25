@@ -1,14 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { QuizInfoCard } from '@/components/quiz-info/QuizInfoCard';
 import { QuizQuestionsCard } from '@/components/quiz-questions/QuizQuestionsCard';
 import type { Question } from '@/components/quiz-questions/QuizQuestionsCard';
 import { useSession } from '@/lib/auth/client';
-import type { CreateQuizInput, Tag } from '@/db/types';
+import type { QuizWithRelations, Tag } from '@/db/types';
+import { ArrowLeft } from 'lucide-react';
 
-export const Route = createFileRoute('/create-quiz')({
-  component: CreateQuiz,
+export const Route = createFileRoute('/quiz/$quizId_/edit')({
+  component: EditQuiz,
 });
 
 interface QuizForm {
@@ -19,29 +20,73 @@ interface QuizForm {
   questions: Question[];
 }
 
-function CreateQuiz() {
+function EditQuiz() {
+  const { quizId } = Route.useParams();
   const navigate = useNavigate();
   const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [quiz, setQuiz] = useState<QuizForm>({
     title: '',
     description: '',
     isPublic: true,
     tags: [],
-    questions: [
-      {
-        id: '1',
-        text: '',
-        points: 1,
-        answers: [
-          { id: '1', text: '', isCorrect: true },
-          { id: '2', text: '', isCorrect: false },
-        ],
-      },
-    ],
+    questions: [],
   });
+
+  useEffect(() => {
+    async function fetchQuiz() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`/api/quiz/${quizId}`);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to fetch quiz');
+        }
+
+        if (result.success) {
+          const quizData: QuizWithRelations = result.data;
+
+          // Check if user owns this quiz
+          if (session?.user?.id !== quizData.userId) {
+            setError('You do not have permission to edit this quiz');
+            return;
+          }
+
+          // Transform the quiz data to match the form structure
+          setQuiz({
+            title: quizData.title,
+            description: quizData.description || '',
+            isPublic: quizData.isPublic,
+            tags: quizData.tags,
+            questions: quizData.questions.map((q) => ({
+              id: q.id,
+              text: q.text,
+              points: q.points,
+              answers: q.answers.map((a) => ({
+                id: a.id,
+                text: a.text,
+                isCorrect: a.isCorrect,
+              })),
+            })),
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching quiz:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch quiz');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    if (session?.user) {
+      fetchQuiz();
+    }
+  }, [quizId, session]);
 
   const handleQuizChange = (field: 'title' | 'description', value: string) => {
     setQuiz((prev) => ({ ...prev, [field]: value }));
@@ -104,9 +149,7 @@ function CreateQuiz() {
   };
 
   const addQuestion = () => {
-    const newQuestionId = String(
-      Math.max(...quiz.questions.map((q) => parseInt(q.id, 10)), 0) + 1,
-    );
+    const newQuestionId = `temp-${Date.now()}`;
     setQuiz((prev) => ({
       ...prev,
       questions: [
@@ -116,8 +159,8 @@ function CreateQuiz() {
           text: '',
           points: 1,
           answers: [
-            { id: '1', text: '', isCorrect: true },
-            { id: '2', text: '', isCorrect: false },
+            { id: `temp-${Date.now()}-1`, text: '', isCorrect: true },
+            { id: `temp-${Date.now()}-2`, text: '', isCorrect: false },
           ],
         },
       ],
@@ -138,9 +181,7 @@ function CreateQuiz() {
       ...prev,
       questions: prev.questions.map((q) => {
         if (q.id === questionId) {
-          const newAnswerId = String(
-            Math.max(...q.answers.map((a) => parseInt(a.id, 10)), 0) + 1,
-          );
+          const newAnswerId = `temp-${Date.now()}`;
           return {
             ...q,
             answers: [
@@ -174,7 +215,7 @@ function CreateQuiz() {
 
     // Check if user is authenticated
     if (!session?.user) {
-      setError('You must be logged in to create a quiz');
+      setError('You must be logged in to edit a quiz');
       return;
     }
 
@@ -219,7 +260,6 @@ function CreateQuiz() {
 
     try {
       // Process tags: pass tag IDs for existing tags and tag names for new tags
-      // The backend will handle creating new tags
       const tagIds: string[] = quiz.tags.map((tag) => {
         // If tag ID starts with 'temp-', it's a new tag, pass the name
         if (tag.id.startsWith('temp-')) {
@@ -229,17 +269,19 @@ function CreateQuiz() {
         return tag.id;
       });
 
-      // Transform the quiz data to match the CreateQuizInput type
-      const quizInput: CreateQuizInput = {
+      // Transform the quiz data to match the UpdateQuizInput type
+      const quizInput = {
         title: quiz.title,
         description: quiz.description || undefined,
         isPublic: quiz.isPublic,
         tagIds,
         questions: quiz.questions.map((q, index) => ({
+          id: q.id.startsWith('temp-') ? undefined : q.id, // Don't send temp IDs
           text: q.text,
           order: index + 1,
           points: q.points,
           answers: q.answers.map((a, answerIndex) => ({
+            id: a.id.startsWith('temp-') ? undefined : a.id, // Don't send temp IDs
             text: a.text,
             isCorrect: a.isCorrect,
             order: answerIndex + 1,
@@ -247,9 +289,9 @@ function CreateQuiz() {
         })),
       };
 
-      // Call the API endpoint to create the quiz
-      const response = await fetch('/api/quiz/create', {
-        method: 'POST',
+      // Call the API endpoint to update the quiz
+      const response = await fetch(`/api/quiz/${quizId}/update`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -259,21 +301,58 @@ function CreateQuiz() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to create quiz');
+        throw new Error(result.error || 'Failed to update quiz');
       }
 
       if (result.success) {
-        // Navigate to the quiz detail page or home page
-        alert('Quiz created successfully!');
-        navigate({ to: '/' });
+        alert('Quiz updated successfully!');
+        navigate({ to: `/quiz/${quizId}` });
       }
     } catch (err) {
-      console.error('Error creating quiz:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create quiz');
+      console.error('Error updating quiz:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update quiz');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ backgroundColor: 'var(--color-background)' }}
+      >
+        <div style={{ color: 'var(--color-foreground)' }}>Loading quiz...</div>
+      </div>
+    );
+  }
+
+  if (error && quiz.questions.length === 0) {
+    return (
+      <div
+        className="min-h-screen px-4 py-12"
+        style={{ backgroundColor: 'var(--color-background)' }}
+      >
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center">
+            <h1
+              className="text-3xl font-bold mb-4"
+              style={{ color: 'var(--color-foreground)' }}
+            >
+              {error}
+            </h1>
+            <Button
+              variant="outline"
+              onClick={() => navigate({ to: '/dashboard' })}
+            >
+              <ArrowLeft className="size-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -281,24 +360,34 @@ function CreateQuiz() {
       style={{ backgroundColor: 'var(--color-background)' }}
     >
       <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate({ to: `/quiz/${quizId}` })}
+          >
+            <ArrowLeft className="size-4 mr-2" />
+            Back to Quiz
+          </Button>
+        </div>
+
         <h1
           className="text-4xl md:text-5xl font-bold mb-2"
           style={{ color: 'var(--color-foreground)' }}
         >
-          Create a New Quiz
+          Edit Quiz
         </h1>
         <p
           className="text-lg mb-8"
           style={{ color: 'var(--color-muted-foreground)' }}
         >
-          Design your custom quiz with questions and multiple-choice answers
+          Update your quiz questions and settings
         </p>
 
         {!session?.user && (
           <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
             <p className="text-yellow-800 dark:text-yellow-200">
-              You must be logged in to create a quiz. Please sign in to
-              continue.
+              You must be logged in to edit a quiz. Please sign in to continue.
             </p>
           </div>
         )}
@@ -339,7 +428,7 @@ function CreateQuiz() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => window.history.back()}
+              onClick={() => navigate({ to: `/quiz/${quizId}` })}
               disabled={isSubmitting}
             >
               Cancel
@@ -354,7 +443,7 @@ function CreateQuiz() {
                 isSubmitting
               }
             >
-              {isSubmitting ? 'Creating...' : 'Create Quiz'}
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>
@@ -363,4 +452,4 @@ function CreateQuiz() {
   );
 }
 
-export default CreateQuiz;
+export default EditQuiz;

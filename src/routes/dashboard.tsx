@@ -16,6 +16,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/Pagination';
+import { ErrorCard } from '@/components/error/ErrorCard';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -147,22 +148,16 @@ function Dashboard() {
         className="min-h-screen px-4 py-12"
         style={{ backgroundColor: 'var(--color-background)' }}
       >
-        <div className="max-w-4xl mx-auto text-center">
-          <h1
-            className="text-4xl font-bold mb-4"
-            style={{ color: 'var(--color-foreground)' }}
-          >
-            Please Sign In
-          </h1>
-          <p
-            className="text-lg mb-8"
-            style={{ color: 'var(--color-muted-foreground)' }}
-          >
-            You need to be signed in to view your dashboard.
-          </p>
-          <Link to="/login">
-            <Button>Sign In</Button>
-          </Link>
+        <div className="max-w-4xl mx-auto">
+          <ErrorCard
+            type="unauthorized"
+            message="You need to be signed in to view your dashboard."
+            actions={
+              <Link to="/login">
+                <Button>Sign In</Button>
+              </Link>
+            }
+          />
         </div>
       </div>
     );
@@ -258,8 +253,14 @@ function Dashboard() {
 
         {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+          <div className="mb-6">
+            <ErrorCard
+              type="server"
+              title="Failed to Load Quizzes"
+              message={error}
+              size="sm"
+              onRetry={() => window.location.reload()}
+            />
           </div>
         )}
 

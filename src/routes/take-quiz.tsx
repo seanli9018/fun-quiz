@@ -17,6 +17,7 @@ import { useSession } from '@/lib/auth/client';
 import type { QuizWithRelations, PaginatedResponse, Tag } from '@/db/types';
 import { QuizOverviewCard } from '@/components/quiz-overview-card';
 import { useDebounce } from '@/lib/hooks';
+import { ErrorCard } from '@/components/error/ErrorCard';
 import {
   Pagination,
   PaginationContent,
@@ -364,11 +365,14 @@ function TakeQuizPage() {
 
         {/* Error State */}
         {error && !loading && (
-          <Card className="border-destructive">
-            <CardContent className="pt-6">
-              <p className="text-destructive text-center">{error}</p>
-            </CardContent>
-          </Card>
+          <div className="mb-8">
+            <ErrorCard
+              type="server"
+              title="Failed to Load Quizzes"
+              message={error}
+              onRetry={() => window.location.reload()}
+            />
+          </div>
         )}
 
         {/* Content Sections */}

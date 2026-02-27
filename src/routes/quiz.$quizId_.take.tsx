@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Send,
 } from 'lucide-react';
+import { ErrorCard } from '@/components/error/ErrorCard';
 
 export const Route = createFileRoute('/quiz/$quizId_/take')({
   component: TakeQuizPage,
@@ -59,7 +60,9 @@ function TakeQuizPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [selectedAnswers, setSelectedAnswers] = useState<
+    Record<string, string>
+  >({});
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState<QuizResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -115,12 +118,12 @@ function TakeQuizPage() {
 
     // Check if all questions are answered
     const unansweredQuestions = quiz.questions.filter(
-      (q) => !selectedAnswers[q.id]
+      (q) => !selectedAnswers[q.id],
     );
 
     if (unansweredQuestions.length > 0) {
       alert(
-        `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`
+        `Please answer all questions before submitting. ${unansweredQuestions.length} question(s) remaining.`,
       );
       return;
     }
@@ -187,18 +190,15 @@ function TakeQuizPage() {
     return (
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-4xl px-4 py-8">
-          <Card className="border-destructive">
-            <CardContent className="pt-6">
-              <div className="text-center py-8">
-                <XCircle className="size-16 text-destructive mx-auto mb-4" />
-                <h2 className="text-2xl font-bold mb-2">Unable to Load Quiz</h2>
-                <p className="text-muted-foreground mb-6">
-                  {error || 'Quiz not found'}
-                </p>
-                <Button onClick={handleBackToList}>Back to Quiz List</Button>
-              </div>
-            </CardContent>
-          </Card>
+          <ErrorCard
+            type={error ? 'server' : 'not-found'}
+            title={error ? 'Unable to Load Quiz' : undefined}
+            message={
+              error || 'This quiz could not be found or may have been deleted.'
+            }
+            onRetry={() => fetchQuiz()}
+            onGoHome={handleBackToList}
+          />
         </div>
       </div>
     );
@@ -211,7 +211,7 @@ function TakeQuizPage() {
 
   // Get result for current question if submitted
   const currentQuestionResult = result?.answers.find(
-    (a) => a.questionId === currentQuestion.id
+    (a) => a.questionId === currentQuestion.id,
   );
 
   return (
@@ -227,7 +227,9 @@ function TakeQuizPage() {
             <ArrowLeft className="size-4" />
             Back to Quizzes
           </Button>
-          <h1 className="text-3xl font-bold text-foreground mb-2">{quiz.title}</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            {quiz.title}
+          </h1>
           {quiz.description && (
             <p className="text-muted-foreground">{quiz.description}</p>
           )}
@@ -314,7 +316,8 @@ function TakeQuizPage() {
               </Badge>
               <Badge variant="outline" className="gap-1">
                 <Clock className="size-3" />
-                {currentQuestion.points} {currentQuestion.points === 1 ? 'point' : 'points'}
+                {currentQuestion.points}{' '}
+                {currentQuestion.points === 1 ? 'point' : 'points'}
               </Badge>
             </div>
             <CardTitle className="text-xl">{currentQuestion.text}</CardTitle>
@@ -322,9 +325,11 @@ function TakeQuizPage() {
           <CardContent>
             <div className="space-y-3">
               {currentQuestion.answers.map((answer) => {
-                const isSelected = selectedAnswers[currentQuestion.id] === answer.id;
+                const isSelected =
+                  selectedAnswers[currentQuestion.id] === answer.id;
                 const isCorrectAnswer =
-                  submitted && currentQuestionResult?.correctAnswerId === answer.id;
+                  submitted &&
+                  currentQuestionResult?.correctAnswerId === answer.id;
                 const isWrongSelection =
                   submitted &&
                   isSelected &&
@@ -333,7 +338,9 @@ function TakeQuizPage() {
                 return (
                   <button
                     key={answer.id}
-                    onClick={() => handleAnswerSelect(currentQuestion.id, answer.id)}
+                    onClick={() =>
+                      handleAnswerSelect(currentQuestion.id, answer.id)
+                    }
                     disabled={submitted}
                     className={`
                       w-full text-left p-4 rounded-lg border-2 transition-all

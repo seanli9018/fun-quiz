@@ -7,6 +7,7 @@ import type { Question } from '@/components/quiz-questions/QuizQuestionsCard';
 import { useSession } from '@/lib/auth/client';
 import type { QuizWithRelations, Tag } from '@/db/types';
 import { ArrowLeft } from 'lucide-react';
+import { ErrorCard } from '@/components/error/ErrorCard';
 
 export const Route = createFileRoute('/quiz/$quizId_/edit')({
   component: EditQuiz,
@@ -334,21 +335,12 @@ function EditQuiz() {
         style={{ backgroundColor: 'var(--color-background)' }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <h1
-              className="text-3xl font-bold mb-4"
-              style={{ color: 'var(--color-foreground)' }}
-            >
-              {error}
-            </h1>
-            <Button
-              variant="outline"
-              onClick={() => navigate({ to: '/dashboard' })}
-            >
-              <ArrowLeft className="size-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </div>
+          <ErrorCard
+            type={error.includes('permission') ? 'forbidden' : 'not-found'}
+            title="Cannot Edit Quiz"
+            message={error}
+            onGoHome={() => navigate({ to: '/dashboard' })}
+          />
         </div>
       </div>
     );
@@ -385,16 +377,23 @@ function EditQuiz() {
         </p>
 
         {!session?.user && (
-          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-            <p className="text-yellow-800 dark:text-yellow-200">
-              You must be logged in to edit a quiz. Please sign in to continue.
-            </p>
+          <div className="mb-6">
+            <ErrorCard
+              type="unauthorized"
+              message="You must be logged in to edit a quiz. Please sign in to continue."
+              size="sm"
+            />
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+          <div className="mb-6">
+            <ErrorCard
+              type="validation"
+              title="Cannot Save Changes"
+              message={error}
+              size="sm"
+            />
           </div>
         )}
 

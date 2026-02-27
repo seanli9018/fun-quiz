@@ -6,6 +6,7 @@ import { QuizQuestionsCard } from '@/components/quiz-questions/QuizQuestionsCard
 import type { Question } from '@/components/quiz-questions/QuizQuestionsCard';
 import { useSession } from '@/lib/auth/client';
 import type { CreateQuizInput, Tag } from '@/db/types';
+import { ErrorCard } from '@/components/error/ErrorCard';
 
 export const Route = createFileRoute('/create-quiz')({
   component: CreateQuiz,
@@ -295,17 +296,23 @@ function CreateQuiz() {
         </p>
 
         {!session?.user && (
-          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-            <p className="text-yellow-800 dark:text-yellow-200">
-              You must be logged in to create a quiz. Please sign in to
-              continue.
-            </p>
+          <div className="mb-6">
+            <ErrorCard
+              type="unauthorized"
+              message="You must be logged in to create a quiz. Please sign in to continue."
+              size="sm"
+            />
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-red-800 dark:text-red-200">{error}</p>
+          <div className="mb-6">
+            <ErrorCard
+              type="validation"
+              title="Cannot Create Quiz"
+              message={error}
+              size="sm"
+            />
           </div>
         )}
 

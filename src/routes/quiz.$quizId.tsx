@@ -15,6 +15,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import { ErrorCard } from '@/components/error/ErrorCard';
 
 export const Route = createFileRoute('/quiz/$quizId')({
   component: QuizView,
@@ -107,20 +108,12 @@ function QuizView() {
         style={{ backgroundColor: 'var(--color-background)' }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <h1
-              className="text-3xl font-bold mb-4"
-              style={{ color: 'var(--color-foreground)' }}
-            >
-              {error || 'Quiz not found'}
-            </h1>
-            <Link to="/dashboard">
-              <Button variant="outline">
-                <ArrowLeft className="size-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
+          <ErrorCard
+            type={error ? 'server' : 'not-found'}
+            title={error ? 'Failed to Load Quiz' : undefined}
+            message={error || undefined}
+            onGoHome={() => navigate({ to: '/dashboard' })}
+          />
         </div>
       </div>
     );
@@ -136,26 +129,11 @@ function QuizView() {
         style={{ backgroundColor: 'var(--color-background)' }}
       >
         <div className="max-w-4xl mx-auto">
-          <div className="text-center">
-            <h1
-              className="text-3xl font-bold mb-4"
-              style={{ color: 'var(--color-foreground)' }}
-            >
-              Access Denied
-            </h1>
-            <p
-              className="text-lg mb-6"
-              style={{ color: 'var(--color-muted-foreground)' }}
-            >
-              This quiz is private and can only be accessed by its owner.
-            </p>
-            <Link to="/dashboard">
-              <Button variant="outline">
-                <ArrowLeft className="size-4 mr-2" />
-                Back to Dashboard
-              </Button>
-            </Link>
-          </div>
+          <ErrorCard
+            type="forbidden"
+            message="This quiz is private and can only be accessed by its owner."
+            onGoHome={() => navigate({ to: '/dashboard' })}
+          />
         </div>
       </div>
     );

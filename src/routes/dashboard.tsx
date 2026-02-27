@@ -7,6 +7,15 @@ import type { QuizWithRelations, Tag } from '@/db/types';
 import { formatCompletionCount } from '@/lib/utils';
 import { Users, TrendingUp } from 'lucide-react';
 import { useDebounce } from '@/lib/hooks';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/Pagination';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -409,15 +418,22 @@ function Dashboard() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="mt-8 flex justify-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <div className="flex items-center gap-2">
+              <Pagination className="mt-8">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage((p) => Math.max(1, p - 1));
+                      }}
+                      className={
+                        currentPage === 1
+                          ? 'pointer-events-none opacity-50'
+                          : ''
+                      }
+                    />
+                  </PaginationItem>
                   {Array.from({ length: totalPages }, (_, i) => i + 1)
                     .filter((page) => {
                       // Show first page, last page, current page, and pages around current
@@ -432,37 +448,37 @@ function Dashboard() {
                       const showEllipsisBefore =
                         index > 0 && page - array[index - 1] > 1;
                       return (
-                        <div key={page} className="flex items-center gap-2">
-                          {showEllipsisBefore && (
-                            <span
-                              style={{ color: 'var(--color-muted-foreground)' }}
-                            >
-                              ...
-                            </span>
-                          )}
-                          <Button
-                            variant={
-                              currentPage === page ? 'default' : 'outline'
-                            }
-                            onClick={() => setCurrentPage(page)}
-                            size="sm"
+                        <PaginationItem key={page}>
+                          {showEllipsisBefore && <PaginationEllipsis />}
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(page);
+                            }}
+                            isActive={currentPage === page}
                           >
                             {page}
-                          </Button>
-                        </div>
+                          </PaginationLink>
+                        </PaginationItem>
                       );
                     })}
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      }}
+                      className={
+                        currentPage === totalPages
+                          ? 'pointer-events-none opacity-50'
+                          : ''
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
             )}
           </>
         )}

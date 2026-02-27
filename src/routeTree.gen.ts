@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TakeQuizRouteImport } from './routes/take-quiz'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreateQuizRouteImport } from './routes/create-quiz'
@@ -20,6 +21,8 @@ import { Route as QuizQuizIdRouteImport } from './routes/quiz.$quizId'
 import { Route as ApiDebugSessionRouteImport } from './routes/api/debug-session'
 import { Route as QuizQuizIdTakeRouteImport } from './routes/quiz.$quizId_.take'
 import { Route as QuizQuizIdEditRouteImport } from './routes/quiz.$quizId_.edit'
+import { Route as ApiUserUpdatePasswordRouteImport } from './routes/api/user/update-password'
+import { Route as ApiUserUpdateBioRouteImport } from './routes/api/user/update-bio'
 import { Route as ApiTagsSearchRouteImport } from './routes/api/tags/search'
 import { Route as ApiTagsListRouteImport } from './routes/api/tags/list'
 import { Route as ApiQuizUserQuizzesRouteImport } from './routes/api/quiz/user-quizzes'
@@ -40,6 +43,11 @@ const TakeQuizRoute = TakeQuizRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -85,6 +93,16 @@ const QuizQuizIdTakeRoute = QuizQuizIdTakeRouteImport.update({
 const QuizQuizIdEditRoute = QuizQuizIdEditRouteImport.update({
   id: '/quiz/$quizId_/edit',
   path: '/quiz/$quizId/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserUpdatePasswordRoute = ApiUserUpdatePasswordRouteImport.update({
+  id: '/api/user/update-password',
+  path: '/api/user/update-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserUpdateBioRoute = ApiUserUpdateBioRouteImport.update({
+  id: '/api/user/update-bio',
+  path: '/api/user/update-bio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiTagsSearchRoute = ApiTagsSearchRouteImport.update({
@@ -149,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/create-quiz': typeof CreateQuizRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/take-quiz': typeof TakeQuizRoute
   '/api/debug-session': typeof ApiDebugSessionRoute
@@ -160,6 +179,8 @@ export interface FileRoutesByFullPath {
   '/api/quiz/user-quizzes': typeof ApiQuizUserQuizzesRoute
   '/api/tags/list': typeof ApiTagsListRoute
   '/api/tags/search': typeof ApiTagsSearchRoute
+  '/api/user/update-bio': typeof ApiUserUpdateBioRoute
+  '/api/user/update-password': typeof ApiUserUpdatePasswordRoute
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
@@ -173,6 +194,7 @@ export interface FileRoutesByTo {
   '/create-quiz': typeof CreateQuizRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/take-quiz': typeof TakeQuizRoute
   '/api/debug-session': typeof ApiDebugSessionRoute
@@ -184,6 +206,8 @@ export interface FileRoutesByTo {
   '/api/quiz/user-quizzes': typeof ApiQuizUserQuizzesRoute
   '/api/tags/list': typeof ApiTagsListRoute
   '/api/tags/search': typeof ApiTagsSearchRoute
+  '/api/user/update-bio': typeof ApiUserUpdateBioRoute
+  '/api/user/update-password': typeof ApiUserUpdatePasswordRoute
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
@@ -198,6 +222,7 @@ export interface FileRoutesById {
   '/create-quiz': typeof CreateQuizRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/take-quiz': typeof TakeQuizRoute
   '/api/debug-session': typeof ApiDebugSessionRoute
@@ -209,6 +234,8 @@ export interface FileRoutesById {
   '/api/quiz/user-quizzes': typeof ApiQuizUserQuizzesRoute
   '/api/tags/list': typeof ApiTagsListRoute
   '/api/tags/search': typeof ApiTagsSearchRoute
+  '/api/user/update-bio': typeof ApiUserUpdateBioRoute
+  '/api/user/update-password': typeof ApiUserUpdatePasswordRoute
   '/quiz/$quizId_/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId_/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
@@ -224,6 +251,7 @@ export interface FileRouteTypes {
     | '/create-quiz'
     | '/dashboard'
     | '/login'
+    | '/settings'
     | '/signup'
     | '/take-quiz'
     | '/api/debug-session'
@@ -235,6 +263,8 @@ export interface FileRouteTypes {
     | '/api/quiz/user-quizzes'
     | '/api/tags/list'
     | '/api/tags/search'
+    | '/api/user/update-bio'
+    | '/api/user/update-password'
     | '/quiz/$quizId/edit'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/delete'
@@ -248,6 +278,7 @@ export interface FileRouteTypes {
     | '/create-quiz'
     | '/dashboard'
     | '/login'
+    | '/settings'
     | '/signup'
     | '/take-quiz'
     | '/api/debug-session'
@@ -259,6 +290,8 @@ export interface FileRouteTypes {
     | '/api/quiz/user-quizzes'
     | '/api/tags/list'
     | '/api/tags/search'
+    | '/api/user/update-bio'
+    | '/api/user/update-password'
     | '/quiz/$quizId/edit'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/delete'
@@ -272,6 +305,7 @@ export interface FileRouteTypes {
     | '/create-quiz'
     | '/dashboard'
     | '/login'
+    | '/settings'
     | '/signup'
     | '/take-quiz'
     | '/api/debug-session'
@@ -283,6 +317,8 @@ export interface FileRouteTypes {
     | '/api/quiz/user-quizzes'
     | '/api/tags/list'
     | '/api/tags/search'
+    | '/api/user/update-bio'
+    | '/api/user/update-password'
     | '/quiz/$quizId_/edit'
     | '/quiz/$quizId_/take'
     | '/api/quiz/$quizId/delete'
@@ -297,6 +333,7 @@ export interface RootRouteChildren {
   CreateQuizRoute: typeof CreateQuizRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   TakeQuizRoute: typeof TakeQuizRoute
   ApiDebugSessionRoute: typeof ApiDebugSessionRoute
@@ -308,6 +345,8 @@ export interface RootRouteChildren {
   ApiQuizUserQuizzesRoute: typeof ApiQuizUserQuizzesRoute
   ApiTagsListRoute: typeof ApiTagsListRoute
   ApiTagsSearchRoute: typeof ApiTagsSearchRoute
+  ApiUserUpdateBioRoute: typeof ApiUserUpdateBioRoute
+  ApiUserUpdatePasswordRoute: typeof ApiUserUpdatePasswordRoute
   QuizQuizIdEditRoute: typeof QuizQuizIdEditRoute
   QuizQuizIdTakeRoute: typeof QuizQuizIdTakeRoute
 }
@@ -326,6 +365,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -389,6 +435,20 @@ declare module '@tanstack/react-router' {
       path: '/quiz/$quizId/edit'
       fullPath: '/quiz/$quizId/edit'
       preLoaderRoute: typeof QuizQuizIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/update-password': {
+      id: '/api/user/update-password'
+      path: '/api/user/update-password'
+      fullPath: '/api/user/update-password'
+      preLoaderRoute: typeof ApiUserUpdatePasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/update-bio': {
+      id: '/api/user/update-bio'
+      path: '/api/user/update-bio'
+      fullPath: '/api/user/update-bio'
+      preLoaderRoute: typeof ApiUserUpdateBioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/tags/search': {
@@ -495,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   CreateQuizRoute: CreateQuizRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   TakeQuizRoute: TakeQuizRoute,
   ApiDebugSessionRoute: ApiDebugSessionRoute,
@@ -506,6 +567,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiQuizUserQuizzesRoute: ApiQuizUserQuizzesRoute,
   ApiTagsListRoute: ApiTagsListRoute,
   ApiTagsSearchRoute: ApiTagsSearchRoute,
+  ApiUserUpdateBioRoute: ApiUserUpdateBioRoute,
+  ApiUserUpdatePasswordRoute: ApiUserUpdatePasswordRoute,
   QuizQuizIdEditRoute: QuizQuizIdEditRoute,
   QuizQuizIdTakeRoute: QuizQuizIdTakeRoute,
 }

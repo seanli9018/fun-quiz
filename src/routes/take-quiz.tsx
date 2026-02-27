@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import {
   Search,
-  ChevronLeft,
-  ChevronRight,
   X,
   Award,
   TrendingDown,
@@ -19,6 +17,13 @@ import { useSession } from '@/lib/auth/client';
 import type { QuizWithRelations, PaginatedResponse, Tag } from '@/db/types';
 import { QuizOverviewCard } from '@/components/quiz-overview-card';
 import { useDebounce } from '@/lib/hooks';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/Pagination';
 
 export const Route = createFileRoute('/take-quiz')({
   component: TakeQuizPage,
@@ -503,36 +508,50 @@ function TakeQuizPage() {
 
                   {/* Pagination */}
                   {totalPages > 1 && (
-                    <div className="flex items-center justify-center gap-4">
-                      <Button
-                        variant="outline"
-                        onClick={handlePreviousPage}
-                        disabled={currentPage === 1}
-                        className="gap-2"
-                      >
-                        <ChevronLeft className="size-4" />
-                        Previous
-                      </Button>
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handlePreviousPage();
+                            }}
+                            className={
+                              currentPage === 1
+                                ? 'pointer-events-none opacity-50'
+                                : ''
+                            }
+                          />
+                        </PaginationItem>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          Page {currentPage} of {totalPages}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          ({total} total)
-                        </span>
-                      </div>
+                        <PaginationItem>
+                          <div className="flex items-center gap-2 px-2">
+                            <span className="text-sm text-muted-foreground">
+                              Page {currentPage} of {totalPages}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              ({total} total)
+                            </span>
+                          </div>
+                        </PaginationItem>
 
-                      <Button
-                        variant="outline"
-                        onClick={handleNextPage}
-                        disabled={currentPage === totalPages}
-                        className="gap-2"
-                      >
-                        Next
-                        <ChevronRight className="size-4" />
-                      </Button>
-                    </div>
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleNextPage();
+                            }}
+                            className={
+                              currentPage === totalPages
+                                ? 'pointer-events-none opacity-50'
+                                : ''
+                            }
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
                   )}
                 </>
               )}

@@ -8,6 +8,7 @@ import {
   LogOut,
   LogIn,
   LayoutDashboard,
+  Settings,
 } from 'lucide-react';
 import {
   NavigationMenu,
@@ -171,6 +172,15 @@ export default function Header() {
                             >
                               <LayoutDashboard className="size-4 text-muted-foreground shrink-0" />
                               My Dashboard
+                            </NavigationMenuLink>
+                          </li>
+                          <li>
+                            <NavigationMenuLink
+                              render={<Link to="/settings" />}
+                              className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted transition-colors"
+                            >
+                              <Settings className="size-4 text-muted-foreground shrink-0" />
+                              Settings
                             </NavigationMenuLink>
                           </li>
                           <li>

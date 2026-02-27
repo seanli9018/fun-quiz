@@ -274,7 +274,7 @@ function SettingsPage() {
                     setBioError('');
                     setBioSuccess('');
                     // Reset to original value
-                    const userBio = (session.user as any).bio || '';
+                    const userBio = (session?.user as any).bio || '';
                     setBio(userBio);
                   }}
                   disabled={bioLoading}

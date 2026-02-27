@@ -13,6 +13,7 @@ import {
   TrendingDown,
   Flame,
   Calendar,
+  ArrowUp,
 } from 'lucide-react';
 import { useSession } from '@/lib/auth/client';
 import type { QuizWithRelations, PaginatedResponse, Tag } from '@/db/types';
@@ -37,10 +38,16 @@ function TakeQuizPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [showMorePopular, setShowMorePopular] = useState(false);
-  const [showMoreHardest, setShowMoreHardest] = useState(false);
+  const [popularPage, setPopularPage] = useState(1);
+  const [hardestPage, setHardestPage] = useState(1);
+  const [hasMorePopular, setHasMorePopular] = useState(true);
+  const [hasMoreHardest, setHasMoreHardest] = useState(true);
+  const [loadingMorePopular, setLoadingMorePopular] = useState(false);
+  const [loadingMoreHardest, setLoadingMoreHardest] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const limit = 12;
   const previewLimit = 4;
+  const loadMoreLimit = 8;
 
   // Fetch all tags
   useEffect(() => {
@@ -62,15 +69,26 @@ function TakeQuizPage() {
     fetchTags();
   }, []);
 
+  // Handle scroll for back to top button
   useEffect(() => {
+    const handleScroll = () => {
+      setShowBackToTop(window.scrollY > 400);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // Reset pages when filters change
+    setPopularPage(1);
+    setHardestPage(1);
+    setPopularQuizzes([]);
+    setHardestQuizzes([]);
+    setHasMorePopular(true);
+    setHasMoreHardest(true);
     fetchAllQuizzes();
-  }, [
-    currentPage,
-    debouncedSearch,
-    selectedTags,
-    showMorePopular,
-    showMoreHardest,
-  ]);
+  }, [currentPage, debouncedSearch, selectedTags]);
 
   const fetchAllQuizzes = async () => {
     try {
@@ -87,17 +105,17 @@ function TakeQuizPage() {
         return new URLSearchParams(params);
       };
 
-      // Fetch popular quizzes
+      // Fetch popular quizzes (initial load)
       const popularParams = buildParams({
         sortBy: 'popular',
-        limit: showMorePopular ? '12' : previewLimit.toString(),
+        limit: previewLimit.toString(),
         page: '1',
       });
 
-      // Fetch hardest quizzes
+      // Fetch hardest quizzes (initial load)
       const hardestParams = buildParams({
         sortBy: 'hardest',
-        limit: showMoreHardest ? '12' : previewLimit.toString(),
+        limit: previewLimit.toString(),
         page: '1',
       });
 
@@ -130,11 +148,87 @@ function TakeQuizPage() {
       setLatestQuizzes(latestData.data);
       setTotalPages(latestData.pagination.totalPages);
       setTotal(latestData.pagination.total);
+
+      // Check if there are more quizzes to load
+      setHasMorePopular(
+        popularData.data.length === previewLimit &&
+          popularData.pagination.totalPages > 1,
+      );
+      setHasMoreHardest(
+        hardestData.data.length === previewLimit &&
+          hardestData.pagination.totalPages > 1,
+      );
     } catch (err) {
       console.error('Error fetching quizzes:', err);
       setError(err instanceof Error ? err.message : 'Failed to load quizzes');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMorePopular = async () => {
+    try {
+      setLoadingMorePopular(true);
+      const nextPage = popularPage + 1;
+
+      const buildParams = (extraParams: Record<string, string>) => {
+        const params: Record<string, string> = { ...extraParams };
+        if (debouncedSearch) params.search = debouncedSearch;
+        if (selectedTags.length > 0) params.tagIds = selectedTags.join(',');
+        return new URLSearchParams(params);
+      };
+
+      const popularParams = buildParams({
+        sortBy: 'popular',
+        limit: loadMoreLimit.toString(),
+        page: nextPage.toString(),
+      });
+
+      const response = await fetch(`/api/quiz/public-quizzes?${popularParams}`);
+      if (!response.ok) throw new Error('Failed to fetch more popular quizzes');
+
+      const data: PaginatedResponse<QuizWithRelations> = await response.json();
+
+      setPopularQuizzes((prev) => [...prev, ...data.data]);
+      setPopularPage(nextPage);
+      setHasMorePopular(nextPage < data.pagination.totalPages);
+    } catch (err) {
+      console.error('Error loading more popular quizzes:', err);
+    } finally {
+      setLoadingMorePopular(false);
+    }
+  };
+
+  const loadMoreHardest = async () => {
+    try {
+      setLoadingMoreHardest(true);
+      const nextPage = hardestPage + 1;
+
+      const buildParams = (extraParams: Record<string, string>) => {
+        const params: Record<string, string> = { ...extraParams };
+        if (debouncedSearch) params.search = debouncedSearch;
+        if (selectedTags.length > 0) params.tagIds = selectedTags.join(',');
+        return new URLSearchParams(params);
+      };
+
+      const hardestParams = buildParams({
+        sortBy: 'hardest',
+        limit: loadMoreLimit.toString(),
+        page: nextPage.toString(),
+      });
+
+      const response = await fetch(`/api/quiz/public-quizzes?${hardestParams}`);
+      if (!response.ok) throw new Error('Failed to fetch more hardest quizzes');
+
+      const data: PaginatedResponse<QuizWithRelations> = await response.json();
+
+      setHardestQuizzes((prev) => [...prev, ...data.data]);
+      setHardestPage(nextPage);
+      setHasMoreHardest(nextPage < data.pagination.totalPages);
+    } catch (err) {
+      console.error('Error loading more hardest quizzes:', err);
+    } finally {
+      setLoadingMoreHardest(false);
     }
   };
 
@@ -166,18 +260,19 @@ function TakeQuizPage() {
   };
 
   const clearFilters = () => {
-    setSelectedTags([]);
     setSearch('');
+    setSelectedTags([]);
     setCurrentPage(1);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   const hasActiveFilters = search.trim() || selectedTags.length > 0;
-  const displayedPopularQuizzes = showMorePopular
-    ? popularQuizzes
-    : popularQuizzes.slice(0, previewLimit);
-  const displayedHardestQuizzes = showMoreHardest
-    ? hardestQuizzes
-    : hardestQuizzes.slice(0, previewLimit);
 
   return (
     <div className="min-h-screen bg-background">
@@ -289,21 +384,31 @@ function TakeQuizPage() {
                       </p>
                     </div>
                   </div>
-                  {popularQuizzes.length > previewLimit && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowMorePopular(!showMorePopular)}
-                      className="gap-2"
-                    >
-                      {showMorePopular ? 'Show Less' : 'Show More'}
-                    </Button>
-                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                  {displayedPopularQuizzes.map((quiz) => (
+                  {popularQuizzes.map((quiz) => (
                     <QuizOverviewCard key={quiz.id} quiz={quiz} />
                   ))}
                 </div>
+                {hasMorePopular && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={loadMorePopular}
+                      disabled={loadingMorePopular}
+                      className="gap-2"
+                    >
+                      {loadingMorePopular ? (
+                        <>
+                          <div className="inline-block size-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        'Show More'
+                      )}
+                    </Button>
+                  </div>
+                )}
               </section>
             )}
 
@@ -322,21 +427,31 @@ function TakeQuizPage() {
                       </p>
                     </div>
                   </div>
-                  {hardestQuizzes.length > previewLimit && (
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowMoreHardest(!showMoreHardest)}
-                      className="gap-2"
-                    >
-                      {showMoreHardest ? 'Show Less' : 'Show More'}
-                    </Button>
-                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                  {displayedHardestQuizzes.map((quiz) => (
+                  {hardestQuizzes.map((quiz) => (
                     <QuizOverviewCard key={quiz.id} quiz={quiz} />
                   ))}
                 </div>
+                {hasMoreHardest && (
+                  <div className="flex justify-center mt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={loadMoreHardest}
+                      disabled={loadingMoreHardest}
+                      className="gap-2"
+                    >
+                      {loadingMoreHardest ? (
+                        <>
+                          <div className="inline-block size-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        'Show More'
+                      )}
+                    </Button>
+                  </div>
+                )}
               </section>
             )}
 
@@ -425,6 +540,17 @@ function TakeQuizPage() {
           </>
         )}
       </div>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 z-50"
+          aria-label="Back to top"
+        >
+          <ArrowUp className="size-6" />
+        </button>
+      )}
     </div>
   );
 }

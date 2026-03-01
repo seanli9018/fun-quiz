@@ -1,6 +1,17 @@
 import { db } from '../index';
 import { quiz, quizTag, question, answer, tag, user } from '../schema';
-import { eq, and, inArray, sql, desc, asc, or, like, ne } from 'drizzle-orm';
+import {
+  eq,
+  and,
+  inArray,
+  sql,
+  desc,
+  asc,
+  or,
+  like,
+  ilike,
+  ne,
+} from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import type {
   CreateQuizInput,
@@ -242,11 +253,12 @@ export async function getQuizzes(
     conditions.push(eq(quiz.isPublic, isPublic));
   }
 
-  if (search) {
+  // Add search filter if provided
+  if (search && search.trim()) {
     conditions.push(
       or(
-        like(quiz.title, `%${search}%`),
-        like(quiz.description, `%${search}%`),
+        ilike(quiz.title, `%${search}%`),
+        ilike(quiz.description, `%${search}%`),
       ),
     );
   }

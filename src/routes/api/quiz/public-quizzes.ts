@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { getQuizzes } from '@/db/repositories/quiz';
+import { getSession } from '@/lib/auth/session';
+import { getBookmarkStatusForQuizzes } from '@/db/repositories/quiz-bookmarks';
 
 export const Route = createFileRoute('/api/quiz/public-quizzes')({
   server: {
@@ -36,6 +38,21 @@ export const Route = createFileRoute('/api/quiz/public-quizzes')({
               limit,
             },
           );
+
+          // Add bookmark status if user is logged in
+          const session = await getSession();
+          if (session?.user) {
+            const quizIds = result.data.map((q) => q.id);
+            const bookmarkStatus = await getBookmarkStatusForQuizzes(
+              session.user.id,
+              quizIds,
+            );
+
+            result.data = result.data.map((quiz) => ({
+              ...quiz,
+              isBookmarked: bookmarkStatus.get(quiz.id) || false,
+            }));
+          }
 
           return new Response(JSON.stringify(result), {
             status: 200,

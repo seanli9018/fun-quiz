@@ -31,7 +31,7 @@ export const Route = createFileRoute('/take-quiz')({
 });
 
 function TakeQuizPage() {
-  const { data: session } = useSession();
+  // const { data: session } = useSession();
   const [popularQuizzes, setPopularQuizzes] = useState<QuizWithRelations[]>([]);
   const [hardestQuizzes, setHardestQuizzes] = useState<QuizWithRelations[]>([]);
   const [latestQuizzes, setLatestQuizzes] = useState<QuizWithRelations[]>([]);
@@ -280,6 +280,16 @@ function TakeQuizPage() {
 
   const hasActiveFilters = search.trim() || selectedTags.length > 0;
 
+  const handleBookmarkChange = (quizId: string, isBookmarked: boolean) => {
+    // Update bookmark status in all quiz lists
+    const updateQuiz = (quiz: QuizWithRelations) =>
+      quiz.id === quizId ? { ...quiz, isBookmarked } : quiz;
+
+    setPopularQuizzes((prev) => prev.map(updateQuiz));
+    setHardestQuizzes((prev) => prev.map(updateQuiz));
+    setLatestQuizzes((prev) => prev.map(updateQuiz));
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8">
@@ -396,7 +406,11 @@ function TakeQuizPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                   {popularQuizzes.map((quiz) => (
-                    <QuizOverviewCard key={quiz.id} quiz={quiz} />
+                    <QuizOverviewCard
+                      key={quiz.id}
+                      quiz={quiz}
+                      onBookmarkChange={handleBookmarkChange}
+                    />
                   ))}
                 </div>
                 {hasMorePopular && (
@@ -439,7 +453,11 @@ function TakeQuizPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                   {hardestQuizzes.map((quiz) => (
-                    <QuizOverviewCard key={quiz.id} quiz={quiz} />
+                    <QuizOverviewCard
+                      key={quiz.id}
+                      quiz={quiz}
+                      onBookmarkChange={handleBookmarkChange}
+                    />
                   ))}
                 </div>
                 {hasMoreHardest && (
@@ -504,9 +522,13 @@ function TakeQuizPage() {
                 </Card>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                     {latestQuizzes.map((quiz) => (
-                      <QuizOverviewCard key={quiz.id} quiz={quiz} />
+                      <QuizOverviewCard
+                        key={quiz.id}
+                        quiz={quiz}
+                        onBookmarkChange={handleBookmarkChange}
+                      />
                     ))}
                   </div>
 

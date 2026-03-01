@@ -6,6 +6,8 @@ import {
   getQuizzes,
   searchTags,
 } from '@/db/repositories/quiz';
+import { getUserById } from '@/db/repositories/user';
+import { getBookmarkStatusForQuizzes } from '@/db/repositories/quiz-bookmarks';
 import type {
   CreateQuizInput,
   QuizFilters,
@@ -101,6 +103,73 @@ export async function getUserQuizzesAction(
     console.error('Error fetching user quizzes:', error);
     throw new Error(
       error instanceof Error ? error.message : 'Failed to fetch quizzes',
+    );
+  }
+}
+
+/**
+ * Get user profile with their quizzes
+ */
+export async function getUserProfileAction(
+  userId: string,
+  filters: Omit<QuizFilters, 'userId'> = {},
+  pagination: PaginationParams = {},
+) {
+  // Get current user session to determine if viewing own profile
+  const headers = getRequestHeaders();
+  const session = await auth.api.getSession({ headers });
+
+  try {
+    // Get user profile
+    const user = await getUserById(userId);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Get user's public quizzes
+    // If viewing own profile, show all quizzes
+    // If viewing another user's profile, only show public quizzes
+    const isOwnProfile = session?.user?.id === userId;
+    const quizFilters: QuizFilters = {
+      ...filters,
+      userId,
+      ...(isOwnProfile ? {} : { isPublic: true }),
+    };
+
+    const result = await getQuizzes(quizFilters, pagination);
+
+    // Add bookmark status if user is logged in
+    if (session?.user) {
+      const quizIds = result.data.map((q) => q.id);
+      const bookmarkStatus = await getBookmarkStatusForQuizzes(
+        session.user.id,
+        quizIds,
+      );
+
+      result.data = result.data.map((quiz) => ({
+        ...quiz,
+        isBookmarked: bookmarkStatus.get(quiz.id) || false,
+      }));
+    }
+
+    return {
+      success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        bio: user.bio,
+        createdAt: user.createdAt,
+      },
+      isOwnProfile,
+      ...result,
+    };
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    throw new Error(
+      error instanceof Error ? error.message : 'Failed to fetch user profile',
     );
   }
 }

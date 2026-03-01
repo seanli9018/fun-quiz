@@ -12,11 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TakeQuizRouteImport } from './routes/take-quiz'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreateQuizRouteImport } from './routes/create-quiz'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserUserIdRouteImport } from './routes/user.$userId'
 import { Route as QuizQuizIdRouteImport } from './routes/quiz.$quizId'
 import { Route as ApiDebugSessionRouteImport } from './routes/api/debug-session'
 import { Route as QuizQuizIdTakeRouteImport } from './routes/quiz.$quizId_.take'
@@ -30,10 +31,13 @@ import { Route as ApiQuizPublicQuizzesRouteImport } from './routes/api/quiz/publ
 import { Route as ApiQuizCreateRouteImport } from './routes/api/quiz/create'
 import { Route as ApiQuizQuizIdRouteImport } from './routes/api/quiz/$quizId'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as ApiUserUserIdProfileRouteImport } from './routes/api/user/$userId.profile'
+import { Route as ApiUserUserIdBookmarksRouteImport } from './routes/api/user/$userId.bookmarks'
 import { Route as ApiQuizQuizIdUpdateRouteImport } from './routes/api/quiz/$quizId.update'
 import { Route as ApiQuizQuizIdTakeRouteImport } from './routes/api/quiz/$quizId.take'
 import { Route as ApiQuizQuizIdSubmitRouteImport } from './routes/api/quiz/$quizId.submit'
 import { Route as ApiQuizQuizIdDeleteRouteImport } from './routes/api/quiz/$quizId.delete'
+import { Route as ApiQuizQuizIdBookmarkRouteImport } from './routes/api/quiz/$quizId.bookmark'
 
 const TakeQuizRoute = TakeQuizRouteImport.update({
   id: '/take-quiz',
@@ -50,14 +54,14 @@ const SettingsRoute = SettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateQuizRoute = CreateQuizRouteImport.update({
@@ -73,6 +77,11 @@ const ContactRoute = ContactRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UserUserIdRoute = UserUserIdRouteImport.update({
+  id: '/user/$userId',
+  path: '/user/$userId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizQuizIdRoute = QuizQuizIdRouteImport.update({
@@ -140,6 +149,16 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUserUserIdProfileRoute = ApiUserUserIdProfileRouteImport.update({
+  id: '/api/user/$userId/profile',
+  path: '/api/user/$userId/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserUserIdBookmarksRoute = ApiUserUserIdBookmarksRouteImport.update({
+  id: '/api/user/$userId/bookmarks',
+  path: '/api/user/$userId/bookmarks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiQuizQuizIdUpdateRoute = ApiQuizQuizIdUpdateRouteImport.update({
   id: '/update',
   path: '/update',
@@ -160,18 +179,24 @@ const ApiQuizQuizIdDeleteRoute = ApiQuizQuizIdDeleteRouteImport.update({
   path: '/delete',
   getParentRoute: () => ApiQuizQuizIdRoute,
 } as any)
+const ApiQuizQuizIdBookmarkRoute = ApiQuizQuizIdBookmarkRouteImport.update({
+  id: '/bookmark',
+  path: '/bookmark',
+  getParentRoute: () => ApiQuizQuizIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/create-quiz': typeof CreateQuizRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/take-quiz': typeof TakeQuizRoute
   '/api/debug-session': typeof ApiDebugSessionRoute
   '/quiz/$quizId': typeof QuizQuizIdRoute
+  '/user/$userId': typeof UserUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/quiz/$quizId': typeof ApiQuizQuizIdRouteWithChildren
   '/api/quiz/create': typeof ApiQuizCreateRoute
@@ -183,22 +208,26 @@ export interface FileRoutesByFullPath {
   '/api/user/update-password': typeof ApiUserUpdatePasswordRoute
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
+  '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
   '/api/quiz/$quizId/update': typeof ApiQuizQuizIdUpdateRoute
+  '/api/user/$userId/bookmarks': typeof ApiUserUserIdBookmarksRoute
+  '/api/user/$userId/profile': typeof ApiUserUserIdProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/create-quiz': typeof CreateQuizRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/take-quiz': typeof TakeQuizRoute
   '/api/debug-session': typeof ApiDebugSessionRoute
   '/quiz/$quizId': typeof QuizQuizIdRoute
+  '/user/$userId': typeof UserUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/quiz/$quizId': typeof ApiQuizQuizIdRouteWithChildren
   '/api/quiz/create': typeof ApiQuizCreateRoute
@@ -210,23 +239,27 @@ export interface FileRoutesByTo {
   '/api/user/update-password': typeof ApiUserUpdatePasswordRoute
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
+  '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
   '/api/quiz/$quizId/update': typeof ApiQuizQuizIdUpdateRoute
+  '/api/user/$userId/bookmarks': typeof ApiUserUserIdBookmarksRoute
+  '/api/user/$userId/profile': typeof ApiUserUserIdProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/create-quiz': typeof CreateQuizRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
   '/take-quiz': typeof TakeQuizRoute
   '/api/debug-session': typeof ApiDebugSessionRoute
   '/quiz/$quizId': typeof QuizQuizIdRoute
+  '/user/$userId': typeof UserUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/quiz/$quizId': typeof ApiQuizQuizIdRouteWithChildren
   '/api/quiz/create': typeof ApiQuizCreateRoute
@@ -238,10 +271,13 @@ export interface FileRoutesById {
   '/api/user/update-password': typeof ApiUserUpdatePasswordRoute
   '/quiz/$quizId_/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId_/take': typeof QuizQuizIdTakeRoute
+  '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
   '/api/quiz/$quizId/update': typeof ApiQuizQuizIdUpdateRoute
+  '/api/user/$userId/bookmarks': typeof ApiUserUserIdBookmarksRoute
+  '/api/user/$userId/profile': typeof ApiUserUserIdProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -249,13 +285,14 @@ export interface FileRouteTypes {
     | '/'
     | '/contact'
     | '/create-quiz'
-    | '/dashboard'
     | '/login'
+    | '/profile'
     | '/settings'
     | '/signup'
     | '/take-quiz'
     | '/api/debug-session'
     | '/quiz/$quizId'
+    | '/user/$userId'
     | '/api/auth/$'
     | '/api/quiz/$quizId'
     | '/api/quiz/create'
@@ -267,22 +304,26 @@ export interface FileRouteTypes {
     | '/api/user/update-password'
     | '/quiz/$quizId/edit'
     | '/quiz/$quizId/take'
+    | '/api/quiz/$quizId/bookmark'
     | '/api/quiz/$quizId/delete'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
     | '/api/quiz/$quizId/update'
+    | '/api/user/$userId/bookmarks'
+    | '/api/user/$userId/profile'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/contact'
     | '/create-quiz'
-    | '/dashboard'
     | '/login'
+    | '/profile'
     | '/settings'
     | '/signup'
     | '/take-quiz'
     | '/api/debug-session'
     | '/quiz/$quizId'
+    | '/user/$userId'
     | '/api/auth/$'
     | '/api/quiz/$quizId'
     | '/api/quiz/create'
@@ -294,22 +335,26 @@ export interface FileRouteTypes {
     | '/api/user/update-password'
     | '/quiz/$quizId/edit'
     | '/quiz/$quizId/take'
+    | '/api/quiz/$quizId/bookmark'
     | '/api/quiz/$quizId/delete'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
     | '/api/quiz/$quizId/update'
+    | '/api/user/$userId/bookmarks'
+    | '/api/user/$userId/profile'
   id:
     | '__root__'
     | '/'
     | '/contact'
     | '/create-quiz'
-    | '/dashboard'
     | '/login'
+    | '/profile'
     | '/settings'
     | '/signup'
     | '/take-quiz'
     | '/api/debug-session'
     | '/quiz/$quizId'
+    | '/user/$userId'
     | '/api/auth/$'
     | '/api/quiz/$quizId'
     | '/api/quiz/create'
@@ -321,23 +366,27 @@ export interface FileRouteTypes {
     | '/api/user/update-password'
     | '/quiz/$quizId_/edit'
     | '/quiz/$quizId_/take'
+    | '/api/quiz/$quizId/bookmark'
     | '/api/quiz/$quizId/delete'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
     | '/api/quiz/$quizId/update'
+    | '/api/user/$userId/bookmarks'
+    | '/api/user/$userId/profile'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactRoute: typeof ContactRoute
   CreateQuizRoute: typeof CreateQuizRoute
-  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   TakeQuizRoute: typeof TakeQuizRoute
   ApiDebugSessionRoute: typeof ApiDebugSessionRoute
   QuizQuizIdRoute: typeof QuizQuizIdRoute
+  UserUserIdRoute: typeof UserUserIdRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiQuizQuizIdRoute: typeof ApiQuizQuizIdRouteWithChildren
   ApiQuizCreateRoute: typeof ApiQuizCreateRoute
@@ -349,6 +398,8 @@ export interface RootRouteChildren {
   ApiUserUpdatePasswordRoute: typeof ApiUserUpdatePasswordRoute
   QuizQuizIdEditRoute: typeof QuizQuizIdEditRoute
   QuizQuizIdTakeRoute: typeof QuizQuizIdTakeRoute
+  ApiUserUserIdBookmarksRoute: typeof ApiUserUserIdBookmarksRoute
+  ApiUserUserIdProfileRoute: typeof ApiUserUserIdProfileRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -374,18 +425,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/create-quiz': {
@@ -407,6 +458,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/user/$userId': {
+      id: '/user/$userId'
+      path: '/user/$userId'
+      fullPath: '/user/$userId'
+      preLoaderRoute: typeof UserUserIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz/$quizId': {
@@ -500,6 +558,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/user/$userId/profile': {
+      id: '/api/user/$userId/profile'
+      path: '/api/user/$userId/profile'
+      fullPath: '/api/user/$userId/profile'
+      preLoaderRoute: typeof ApiUserUserIdProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/$userId/bookmarks': {
+      id: '/api/user/$userId/bookmarks'
+      path: '/api/user/$userId/bookmarks'
+      fullPath: '/api/user/$userId/bookmarks'
+      preLoaderRoute: typeof ApiUserUserIdBookmarksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/quiz/$quizId/update': {
       id: '/api/quiz/$quizId/update'
       path: '/update'
@@ -528,10 +600,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuizQuizIdDeleteRouteImport
       parentRoute: typeof ApiQuizQuizIdRoute
     }
+    '/api/quiz/$quizId/bookmark': {
+      id: '/api/quiz/$quizId/bookmark'
+      path: '/bookmark'
+      fullPath: '/api/quiz/$quizId/bookmark'
+      preLoaderRoute: typeof ApiQuizQuizIdBookmarkRouteImport
+      parentRoute: typeof ApiQuizQuizIdRoute
+    }
   }
 }
 
 interface ApiQuizQuizIdRouteChildren {
+  ApiQuizQuizIdBookmarkRoute: typeof ApiQuizQuizIdBookmarkRoute
   ApiQuizQuizIdDeleteRoute: typeof ApiQuizQuizIdDeleteRoute
   ApiQuizQuizIdSubmitRoute: typeof ApiQuizQuizIdSubmitRoute
   ApiQuizQuizIdTakeRoute: typeof ApiQuizQuizIdTakeRoute
@@ -539,6 +619,7 @@ interface ApiQuizQuizIdRouteChildren {
 }
 
 const ApiQuizQuizIdRouteChildren: ApiQuizQuizIdRouteChildren = {
+  ApiQuizQuizIdBookmarkRoute: ApiQuizQuizIdBookmarkRoute,
   ApiQuizQuizIdDeleteRoute: ApiQuizQuizIdDeleteRoute,
   ApiQuizQuizIdSubmitRoute: ApiQuizQuizIdSubmitRoute,
   ApiQuizQuizIdTakeRoute: ApiQuizQuizIdTakeRoute,
@@ -553,13 +634,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactRoute: ContactRoute,
   CreateQuizRoute: CreateQuizRoute,
-  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   TakeQuizRoute: TakeQuizRoute,
   ApiDebugSessionRoute: ApiDebugSessionRoute,
   QuizQuizIdRoute: QuizQuizIdRoute,
+  UserUserIdRoute: UserUserIdRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiQuizQuizIdRoute: ApiQuizQuizIdRouteWithChildren,
   ApiQuizCreateRoute: ApiQuizCreateRoute,
@@ -571,6 +653,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUserUpdatePasswordRoute: ApiUserUpdatePasswordRoute,
   QuizQuizIdEditRoute: QuizQuizIdEditRoute,
   QuizQuizIdTakeRoute: QuizQuizIdTakeRoute,
+  ApiUserUserIdBookmarksRoute: ApiUserUserIdBookmarksRoute,
+  ApiUserUserIdProfileRoute: ApiUserUserIdProfileRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

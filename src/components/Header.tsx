@@ -167,11 +167,16 @@ export default function Header() {
                           </li>
                           <li>
                             <NavigationMenuLink
-                              render={<Link to="/dashboard" />}
+                              render={
+                                <Link
+                                  to="/user/$userId"
+                                  params={{ userId: session.user.id }}
+                                />
+                              }
                               className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium hover:bg-muted transition-colors"
                             >
                               <LayoutDashboard className="size-4 text-muted-foreground shrink-0" />
-                              My Dashboard
+                              My Profile
                             </NavigationMenuLink>
                           </li>
                           <li>

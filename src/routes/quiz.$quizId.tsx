@@ -80,7 +80,7 @@ function QuizView() {
 
       if (result.success) {
         alert('Quiz deleted successfully!');
-        navigate({ to: '/dashboard' });
+        navigate({ to: session?.user ? `/user/${session.user.id}` : '/' });
       }
     } catch (err) {
       console.error('Error deleting quiz:', err);
@@ -112,7 +112,7 @@ function QuizView() {
             type={error ? 'server' : 'not-found'}
             title={error ? 'Failed to Load Quiz' : undefined}
             message={error || undefined}
-            onGoHome={() => navigate({ to: '/dashboard' })}
+            onGoHome={() => navigate({ to: '/' })}
           />
         </div>
       </div>
@@ -132,7 +132,7 @@ function QuizView() {
           <ErrorCard
             type="forbidden"
             message="This quiz is private and can only be accessed by its owner."
-            onGoHome={() => navigate({ to: '/dashboard' })}
+            onGoHome={() => navigate({ to: '/' })}
           />
         </div>
       </div>
@@ -147,12 +147,14 @@ function QuizView() {
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
-          <Link to="/dashboard">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="size-4 mr-2" />
-              Back to Dashboard
-            </Button>
-          </Link>
+          {session?.user && (
+            <Link to="/user/$userId" params={{ userId: session.user.id }}>
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="size-4 mr-2" />
+                Back to Profile
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Quiz Header */}
@@ -240,9 +242,15 @@ function QuizView() {
             style={{ color: 'var(--color-muted-foreground)' }}
           >
             Created by{' '}
-            <strong>
-              {quiz.user.name === 'Admin' ? 'FunQuiz' : quiz.user.name}
-            </strong>
+            {quiz.user.name === 'Admin' ? (
+              <strong>FunQuiz</strong>
+            ) : (
+              <Link to="/user/$userId" params={{ userId: quiz.userId }}>
+                <strong className="hover:underline cursor-pointer">
+                  {quiz.user.name}
+                </strong>
+              </Link>
+            )}
           </div>
 
           {/* Action Buttons */}

@@ -43,9 +43,9 @@ function App() {
             </Button>
           </Link>
           {session?.user && (
-            <Link to="/dashboard">
+            <Link to="/user/$userId" params={{ userId: session.user.id }}>
               <Button variant="outline" size="lg">
-                My Dashboard
+                My Profile
               </Button>
             </Link>
           )}

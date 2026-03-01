@@ -126,12 +126,25 @@ export const quizAttempt = pgTable('quiz_attempt', {
   completedAt: timestamp('completed_at').notNull().defaultNow(),
 });
 
+// Quiz bookmark - stores user bookmarks for quizzes
+export const quizBookmark = pgTable('quiz_bookmark', {
+  id: text('id').primaryKey(),
+  quizId: text('quiz_id')
+    .notNull()
+    .references(() => quiz.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(user, ({ many }) => ({
   quizzes: many(quiz),
   sessions: many(session),
   accounts: many(account),
   quizAttempts: many(quizAttempt),
+  bookmarks: many(quizBookmark),
 }));
 
 export const quizRelations = relations(quiz, ({ one, many }) => ({
@@ -142,6 +155,7 @@ export const quizRelations = relations(quiz, ({ one, many }) => ({
   quizTags: many(quizTag),
   questions: many(question),
   attempts: many(quizAttempt),
+  bookmarks: many(quizBookmark),
 }));
 
 export const tagRelations = relations(tag, ({ many }) => ({
@@ -181,6 +195,17 @@ export const quizAttemptRelations = relations(quizAttempt, ({ one }) => ({
   }),
   user: one(user, {
     fields: [quizAttempt.userId],
+    references: [user.id],
+  }),
+}));
+
+export const quizBookmarkRelations = relations(quizBookmark, ({ one }) => ({
+  quiz: one(quiz, {
+    fields: [quizBookmark.quizId],
+    references: [quiz.id],
+  }),
+  user: one(user, {
+    fields: [quizBookmark.userId],
     references: [user.id],
   }),
 }));

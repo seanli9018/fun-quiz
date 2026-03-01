@@ -6,6 +6,7 @@ import type {
   question,
   answer,
   quizAttempt,
+  quizBookmark,
 } from './schema';
 
 // Select types (for reading from database)
@@ -15,6 +16,7 @@ export type QuizTag = InferSelectModel<typeof quizTag>;
 export type Question = InferSelectModel<typeof question>;
 export type Answer = InferSelectModel<typeof answer>;
 export type QuizAttempt = InferSelectModel<typeof quizAttempt>;
+export type QuizBookmark = InferSelectModel<typeof quizBookmark>;
 
 // Insert types (for inserting into database)
 export type QuizInsert = InferInsertModel<typeof quiz>;
@@ -23,6 +25,7 @@ export type QuizTagInsert = InferInsertModel<typeof quizTag>;
 export type QuestionInsert = InferInsertModel<typeof question>;
 export type AnswerInsert = InferInsertModel<typeof answer>;
 export type QuizAttemptInsert = InferInsertModel<typeof quizAttempt>;
+export type QuizBookmarkInsert = InferInsertModel<typeof quizBookmark>;
 
 // Extended types with relations
 export type QuizWithRelations = Quiz & {
@@ -40,6 +43,7 @@ export type QuizWithRelations = Quiz & {
     completionCount: number;
     averageScore: number;
   };
+  isBookmarked?: boolean;
 };
 
 export type QuestionWithAnswers = Question & {

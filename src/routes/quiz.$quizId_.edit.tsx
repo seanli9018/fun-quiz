@@ -339,7 +339,7 @@ function EditQuiz() {
             type={error.includes('permission') ? 'forbidden' : 'not-found'}
             title="Cannot Edit Quiz"
             message={error}
-            onGoHome={() => navigate({ to: '/dashboard' })}
+            onGoHome={() => navigate({ to: '/' })}
           />
         </div>
       </div>

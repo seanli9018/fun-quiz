@@ -138,6 +138,23 @@ export const quizBookmark = pgTable('quiz_bookmark', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// Quiz comment - stores comments on quizzes with support for replies
+export const quizComment = pgTable('quiz_comment', {
+  id: text('id').primaryKey(),
+  quizId: text('quiz_id')
+    .notNull()
+    .references(() => quiz.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  parentId: text('parent_id').references((): any => quizComment.id, {
+    onDelete: 'cascade',
+  }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(user, ({ many }) => ({
   quizzes: many(quiz),
@@ -145,6 +162,7 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   quizAttempts: many(quizAttempt),
   bookmarks: many(quizBookmark),
+  comments: many(quizComment),
 }));
 
 export const quizRelations = relations(quiz, ({ one, many }) => ({
@@ -156,6 +174,7 @@ export const quizRelations = relations(quiz, ({ one, many }) => ({
   questions: many(question),
   attempts: many(quizAttempt),
   bookmarks: many(quizBookmark),
+  comments: many(quizComment),
 }));
 
 export const tagRelations = relations(tag, ({ many }) => ({
@@ -207,5 +226,24 @@ export const quizBookmarkRelations = relations(quizBookmark, ({ one }) => ({
   user: one(user, {
     fields: [quizBookmark.userId],
     references: [user.id],
+  }),
+}));
+
+export const quizCommentRelations = relations(quizComment, ({ one, many }) => ({
+  quiz: one(quiz, {
+    fields: [quizComment.quizId],
+    references: [quiz.id],
+  }),
+  user: one(user, {
+    fields: [quizComment.userId],
+    references: [user.id],
+  }),
+  parent: one(quizComment, {
+    fields: [quizComment.parentId],
+    references: [quizComment.id],
+    relationName: 'comment_replies',
+  }),
+  replies: many(quizComment, {
+    relationName: 'comment_replies',
   }),
 }));

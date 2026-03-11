@@ -16,6 +16,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { ErrorCard } from '@/components/error/ErrorCard';
+import { CommentSection } from '@/components/comments/CommentSection';
 
 export const Route = createFileRoute('/quiz/$quizId')({
   component: QuizView,
@@ -290,10 +291,10 @@ function QuizView() {
           </div>
         </div>
 
-        {/* Questions Preview */}
-        {isOwner ? (
+        {/* Questions Preview - Owner Only */}
+        {isOwner && (
           <div
-            className="p-8 rounded-lg"
+            className="p-8 rounded-lg mb-6"
             style={{
               backgroundColor: 'var(--color-card)',
               borderColor: 'var(--color-border)',
@@ -304,14 +305,14 @@ function QuizView() {
               className="text-2xl font-bold mb-6"
               style={{ color: 'var(--color-foreground)' }}
             >
-              Questions Preview (Owner View)
+              Questions Preview
             </h2>
 
             <div className="space-y-6">
               {quiz.questions.map((question, index) => (
                 <div
                   key={question.id}
-                  className="pb-6 border-b"
+                  className="pb-6 border-b last:border-0"
                   style={{ borderColor: 'var(--color-border)' }}
                 >
                   <div className="flex gap-4">
@@ -383,35 +384,10 @@ function QuizView() {
               ))}
             </div>
           </div>
-        ) : (
-          <div
-            className="p-8 rounded-lg text-center"
-            style={{
-              backgroundColor: 'var(--color-card)',
-              borderColor: 'var(--color-border)',
-              borderWidth: '1px',
-            }}
-          >
-            <h2
-              className="text-2xl font-bold mb-4"
-              style={{ color: 'var(--color-foreground)' }}
-            >
-              Ready to Test Your Knowledge?
-            </h2>
-            <p
-              className="text-lg mb-6"
-              style={{ color: 'var(--color-muted-foreground)' }}
-            >
-              This quiz has {quiz.questions.length} questions. Click below to
-              start!
-            </p>
-            <Link to="/quiz/$quizId/take" params={{ quizId: quiz.id }}>
-              <Button variant="default" size="lg">
-                Start Quiz
-              </Button>
-            </Link>
-          </div>
         )}
+
+        {/* Comments Section - Available to All Users */}
+        <CommentSection quizId={quiz.id} />
       </div>
     </div>
   );

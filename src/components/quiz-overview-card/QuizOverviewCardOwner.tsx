@@ -20,7 +20,11 @@ export function QuizOverviewCardOwner({ quiz }: QuizOverviewCardOwnerProps) {
     <Card className="hover:shadow-lg transition-shadow duration-200 flex flex-col h-full border">
       <CardHeader>
         <div className="flex items-start justify-between gap-2 mb-1.5">
-          <CardTitle className="text-base line-clamp-2">{quiz.title}</CardTitle>
+          <Link to="/quiz/$quizId" params={{ quizId: quiz.id }}>
+            <CardTitle className="text-base line-clamp-2 hover:underline cursor-pointer">
+              {quiz.title}
+            </CardTitle>
+          </Link>
         </div>
         {/* Tags */}
         {quiz.tags.length > 0 && (

@@ -7,6 +7,7 @@ import type {
   answer,
   quizAttempt,
   quizBookmark,
+  quizComment,
 } from './schema';
 
 // Select types (for reading from database)
@@ -17,6 +18,7 @@ export type Question = InferSelectModel<typeof question>;
 export type Answer = InferSelectModel<typeof answer>;
 export type QuizAttempt = InferSelectModel<typeof quizAttempt>;
 export type QuizBookmark = InferSelectModel<typeof quizBookmark>;
+export type QuizComment = InferSelectModel<typeof quizComment>;
 
 // Insert types (for inserting into database)
 export type QuizInsert = InferInsertModel<typeof quiz>;
@@ -26,6 +28,7 @@ export type QuestionInsert = InferInsertModel<typeof question>;
 export type AnswerInsert = InferInsertModel<typeof answer>;
 export type QuizAttemptInsert = InferInsertModel<typeof quizAttempt>;
 export type QuizBookmarkInsert = InferInsertModel<typeof quizBookmark>;
+export type QuizCommentInsert = InferInsertModel<typeof quizComment>;
 
 // Extended types with relations
 export type QuizWithRelations = Quiz & {
@@ -143,4 +146,20 @@ export type PaginatedResponse<T> = {
 export type QuizStats = {
   completionCount: number;
   averageScore: number;
+};
+
+// Comment types
+export type CommentWithUser = QuizComment & {
+  user: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  replies?: CommentWithUser[];
+};
+
+export type CreateCommentInput = {
+  quizId: string;
+  content: string;
+  parentId?: string;
 };

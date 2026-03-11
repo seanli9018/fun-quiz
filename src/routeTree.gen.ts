@@ -37,6 +37,7 @@ import { Route as ApiQuizQuizIdUpdateRouteImport } from './routes/api/quiz/$quiz
 import { Route as ApiQuizQuizIdTakeRouteImport } from './routes/api/quiz/$quizId.take'
 import { Route as ApiQuizQuizIdSubmitRouteImport } from './routes/api/quiz/$quizId.submit'
 import { Route as ApiQuizQuizIdDeleteRouteImport } from './routes/api/quiz/$quizId.delete'
+import { Route as ApiQuizQuizIdCommentsRouteImport } from './routes/api/quiz/$quizId.comments'
 import { Route as ApiQuizQuizIdBookmarkRouteImport } from './routes/api/quiz/$quizId.bookmark'
 
 const TakeQuizRoute = TakeQuizRouteImport.update({
@@ -179,6 +180,11 @@ const ApiQuizQuizIdDeleteRoute = ApiQuizQuizIdDeleteRouteImport.update({
   path: '/delete',
   getParentRoute: () => ApiQuizQuizIdRoute,
 } as any)
+const ApiQuizQuizIdCommentsRoute = ApiQuizQuizIdCommentsRouteImport.update({
+  id: '/comments',
+  path: '/comments',
+  getParentRoute: () => ApiQuizQuizIdRoute,
+} as any)
 const ApiQuizQuizIdBookmarkRoute = ApiQuizQuizIdBookmarkRouteImport.update({
   id: '/bookmark',
   path: '/bookmark',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
+  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
+  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/quiz/$quizId_/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId_/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
+  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRoute
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/quiz/$quizId/edit'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/bookmark'
+    | '/api/quiz/$quizId/comments'
     | '/api/quiz/$quizId/delete'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
@@ -336,6 +346,7 @@ export interface FileRouteTypes {
     | '/quiz/$quizId/edit'
     | '/quiz/$quizId/take'
     | '/api/quiz/$quizId/bookmark'
+    | '/api/quiz/$quizId/comments'
     | '/api/quiz/$quizId/delete'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
@@ -367,6 +378,7 @@ export interface FileRouteTypes {
     | '/quiz/$quizId_/edit'
     | '/quiz/$quizId_/take'
     | '/api/quiz/$quizId/bookmark'
+    | '/api/quiz/$quizId/comments'
     | '/api/quiz/$quizId/delete'
     | '/api/quiz/$quizId/submit'
     | '/api/quiz/$quizId/take'
@@ -600,6 +612,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuizQuizIdDeleteRouteImport
       parentRoute: typeof ApiQuizQuizIdRoute
     }
+    '/api/quiz/$quizId/comments': {
+      id: '/api/quiz/$quizId/comments'
+      path: '/comments'
+      fullPath: '/api/quiz/$quizId/comments'
+      preLoaderRoute: typeof ApiQuizQuizIdCommentsRouteImport
+      parentRoute: typeof ApiQuizQuizIdRoute
+    }
     '/api/quiz/$quizId/bookmark': {
       id: '/api/quiz/$quizId/bookmark'
       path: '/bookmark'
@@ -612,6 +631,7 @@ declare module '@tanstack/react-router' {
 
 interface ApiQuizQuizIdRouteChildren {
   ApiQuizQuizIdBookmarkRoute: typeof ApiQuizQuizIdBookmarkRoute
+  ApiQuizQuizIdCommentsRoute: typeof ApiQuizQuizIdCommentsRoute
   ApiQuizQuizIdDeleteRoute: typeof ApiQuizQuizIdDeleteRoute
   ApiQuizQuizIdSubmitRoute: typeof ApiQuizQuizIdSubmitRoute
   ApiQuizQuizIdTakeRoute: typeof ApiQuizQuizIdTakeRoute
@@ -620,6 +640,7 @@ interface ApiQuizQuizIdRouteChildren {
 
 const ApiQuizQuizIdRouteChildren: ApiQuizQuizIdRouteChildren = {
   ApiQuizQuizIdBookmarkRoute: ApiQuizQuizIdBookmarkRoute,
+  ApiQuizQuizIdCommentsRoute: ApiQuizQuizIdCommentsRoute,
   ApiQuizQuizIdDeleteRoute: ApiQuizQuizIdDeleteRoute,
   ApiQuizQuizIdSubmitRoute: ApiQuizQuizIdSubmitRoute,
   ApiQuizQuizIdTakeRoute: ApiQuizQuizIdTakeRoute,

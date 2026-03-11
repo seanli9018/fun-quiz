@@ -3,7 +3,7 @@ import { useSession } from '@/lib/auth/client';
 import { Button } from '@/components/ui/Button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/Avatar';
 import type { CommentWithUser } from '@/db/types';
-import { MessageSquare, Reply, ChevronDown } from 'lucide-react';
+import { MessageSquare, Reply, ChevronDown, Heart } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
 
 interface CommentSectionProps {
@@ -26,6 +26,8 @@ interface CommentItemProps {
   visibleRepliesCount?: number;
   onShowMoreReplies?: () => void;
   totalReplies?: number;
+  onToggleLike: (commentId: string) => Promise<void>;
+  quizId: string;
 }
 
 function CommentItem({
@@ -40,9 +42,14 @@ function CommentItem({
   visibleRepliesCount = 2,
   onShowMoreReplies,
   totalReplies = 0,
+  onToggleLike,
+  quizId,
 }: CommentItemProps) {
   const [replyContent, setReplyContent] = useState('');
   const { data: session } = useSession();
+  const [isLiked, setIsLiked] = useState(comment.isLikedByUser);
+  const [likeCount, setLikeCount] = useState(comment.likeCount);
+  const [isLiking, setIsLiking] = useState(false);
 
   const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,6 +86,28 @@ function CommentItem({
       return `${Math.floor(diffInSeconds / 86400)} days ago`;
 
     return commentDate.toLocaleDateString();
+  };
+
+  const handleToggleLike = async () => {
+    if (!session?.user || isLiking) return;
+
+    setIsLiking(true);
+    const previousIsLiked = isLiked;
+    const previousLikeCount = likeCount;
+
+    // Optimistic update
+    setIsLiked(!isLiked);
+    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+
+    try {
+      await onToggleLike(comment.id);
+    } catch (error) {
+      // Revert on error
+      setIsLiked(previousIsLiked);
+      setLikeCount(previousLikeCount);
+    } finally {
+      setIsLiking(false);
+    }
   };
 
   return (
@@ -136,18 +165,39 @@ function CommentItem({
             </p>
           </div>
 
-          {session?.user && (
+          <div className="mt-1 flex items-center gap-3">
+            {/* Like Button */}
             <button
-              onClick={() => onReply(comment.id)}
-              className="mt-1 px-2 py-1 text-xs font-medium rounded hover:bg-opacity-80 transition-colors flex items-center gap-1"
+              onClick={handleToggleLike}
+              disabled={!session?.user || isLiking}
+              className="px-2 py-1 text-xs font-medium rounded hover:bg-opacity-80 transition-colors flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                color: 'var(--color-muted-foreground)',
+                color: isLiked
+                  ? 'var(--color-destructive, #dc2626)'
+                  : 'var(--color-muted-foreground)',
               }}
+              title={
+                !session?.user ? 'Login to like' : isLiked ? 'Unlike' : 'Like'
+              }
             >
-              <Reply className="size-3" />
-              Reply
+              <Heart className={`size-3.5 ${isLiked ? 'fill-current' : ''}`} />
+              {likeCount > 0 && <span>{likeCount}</span>}
             </button>
-          )}
+
+            {/* Reply Button */}
+            {session?.user && (
+              <button
+                onClick={() => onReply(comment.id)}
+                className="px-2 py-1 text-xs font-medium rounded hover:bg-opacity-80 transition-colors flex items-center gap-1"
+                style={{
+                  color: 'var(--color-muted-foreground)',
+                }}
+              >
+                <Reply className="size-3" />
+                Reply
+              </button>
+            )}
+          </div>
 
           {/* Reply Form */}
           {replyingTo === comment.id && (
@@ -214,6 +264,8 @@ function CommentItem({
                     isSubmitting={isSubmitting}
                     isReply={true}
                     replyToName={replyToUser}
+                    onToggleLike={onToggleLike}
+                    quizId={quizId}
                   />
                 );
               })}
@@ -394,6 +446,32 @@ export function CommentSection({ quizId }: CommentSectionProps) {
     }));
   };
 
+  const handleToggleLike = async (commentId: string) => {
+    try {
+      const response = await fetch(
+        `/api/quiz/${quizId}/comments/${commentId}/like`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to toggle like');
+      }
+
+      // Refresh comments to get updated counts
+      await fetchComments();
+    } catch (err) {
+      console.error('Error toggling like:', err);
+      setError(err instanceof Error ? err.message : 'Failed to toggle like');
+    }
+  };
+
   return (
     <div
       className="rounded-lg p-6"
@@ -509,6 +587,8 @@ export function CommentSection({ quizId }: CommentSectionProps) {
               visibleRepliesCount={visibleReplies[comment.id] || 2}
               onShowMoreReplies={() => handleShowMoreReplies(comment.id)}
               totalReplies={comment.replies?.length || 0}
+              onToggleLike={handleToggleLike}
+              quizId={quizId}
             />
           ))}
         </div>

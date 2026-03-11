@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { auth } from '@/lib/auth/server';
 import { db } from '@/db';
-import { quizComment, user, quiz } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { quizComment, user, quiz, commentLike } from '@/db/schema';
+import { eq, and, desc, sql } from 'drizzle-orm';
 
 export const Route = createFileRoute('/api/quiz/$quizId/comments')({
   server: {
@@ -49,7 +49,7 @@ export const Route = createFileRoute('/api/quiz/$quizId/comments')({
             );
           }
 
-          // Fetch all comments for the quiz (both top-level and replies)
+          // Fetch all comments for the quiz with like counts
           const allComments = await db
             .select({
               id: quizComment.id,
@@ -61,11 +61,28 @@ export const Route = createFileRoute('/api/quiz/$quizId/comments')({
               updatedAt: quizComment.updatedAt,
               userName: user.name,
               userImage: user.image,
+              likeCount: sql<number>`count(distinct ${commentLike.id})`.as(
+                'like_count',
+              ),
             })
             .from(quizComment)
             .leftJoin(user, eq(quizComment.userId, user.id))
+            .leftJoin(commentLike, eq(quizComment.id, commentLike.commentId))
             .where(eq(quizComment.quizId, quizId))
+            .groupBy(quizComment.id, user.id)
             .orderBy(desc(quizComment.createdAt));
+
+          // Get user's liked comments if authenticated
+          let userLikedCommentIds: Set<string> = new Set();
+          if (userId) {
+            const userLikes = await db
+              .select({ commentId: commentLike.commentId })
+              .from(commentLike)
+              .where(eq(commentLike.userId, userId));
+            userLikedCommentIds = new Set(
+              userLikes.map((like) => like.commentId),
+            );
+          }
 
           // Organize comments into a flat 2-layer structure
           const commentMap = new Map();
@@ -86,6 +103,8 @@ export const Route = createFileRoute('/api/quiz/$quizId/comments')({
                 name: comment.userName || 'Unknown User',
                 image: comment.userImage,
               },
+              likeCount: Number(comment.likeCount) || 0,
+              isLikedByUser: userLikedCommentIds.has(comment.id),
               replies: [],
             };
             commentMap.set(comment.id, commentObj);
@@ -283,6 +302,8 @@ export const Route = createFileRoute('/api/quiz/$quizId/comments')({
                 name: result.userName || 'Unknown User',
                 image: result.userImage,
               },
+              likeCount: 0,
+              isLikedByUser: false,
               replies: [],
             },
           });

@@ -155,6 +155,18 @@ export const quizComment = pgTable('quiz_comment', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// Quiz comment like - stores user likes on comments
+export const commentLike = pgTable('comment_like', {
+  id: text('id').primaryKey(),
+  commentId: text('comment_id')
+    .notNull()
+    .references(() => quizComment.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
 // Relations
 export const userRelations = relations(user, ({ many }) => ({
   quizzes: many(quiz),
@@ -163,6 +175,7 @@ export const userRelations = relations(user, ({ many }) => ({
   quizAttempts: many(quizAttempt),
   bookmarks: many(quizBookmark),
   comments: many(quizComment),
+  commentLikes: many(commentLike),
 }));
 
 export const quizRelations = relations(quiz, ({ one, many }) => ({
@@ -245,5 +258,17 @@ export const quizCommentRelations = relations(quizComment, ({ one, many }) => ({
   }),
   replies: many(quizComment, {
     relationName: 'comment_replies',
+  }),
+  likes: many(commentLike),
+}));
+
+export const commentLikeRelations = relations(commentLike, ({ one }) => ({
+  comment: one(quizComment, {
+    fields: [commentLike.commentId],
+    references: [quizComment.id],
+  }),
+  user: one(user, {
+    fields: [commentLike.userId],
+    references: [user.id],
   }),
 }));

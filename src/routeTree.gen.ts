@@ -39,6 +39,7 @@ import { Route as ApiQuizQuizIdSubmitRouteImport } from './routes/api/quiz/$quiz
 import { Route as ApiQuizQuizIdDeleteRouteImport } from './routes/api/quiz/$quizId.delete'
 import { Route as ApiQuizQuizIdCommentsRouteImport } from './routes/api/quiz/$quizId.comments'
 import { Route as ApiQuizQuizIdBookmarkRouteImport } from './routes/api/quiz/$quizId.bookmark'
+import { Route as ApiQuizQuizIdCommentsCommentIdLikeRouteImport } from './routes/api/quiz/$quizId.comments.$commentId.like'
 
 const TakeQuizRoute = TakeQuizRouteImport.update({
   id: '/take-quiz',
@@ -190,6 +191,12 @@ const ApiQuizQuizIdBookmarkRoute = ApiQuizQuizIdBookmarkRouteImport.update({
   path: '/bookmark',
   getParentRoute: () => ApiQuizQuizIdRoute,
 } as any)
+const ApiQuizQuizIdCommentsCommentIdLikeRoute =
+  ApiQuizQuizIdCommentsCommentIdLikeRouteImport.update({
+    id: '/$commentId/like',
+    path: '/$commentId/like',
+    getParentRoute: () => ApiQuizQuizIdCommentsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,13 +222,14 @@ export interface FileRoutesByFullPath {
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
-  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRoute
+  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRouteWithChildren
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
   '/api/quiz/$quizId/update': typeof ApiQuizQuizIdUpdateRoute
   '/api/user/$userId/bookmarks': typeof ApiUserUserIdBookmarksRoute
   '/api/user/$userId/profile': typeof ApiUserUserIdProfileRoute
+  '/api/quiz/$quizId/comments/$commentId/like': typeof ApiQuizQuizIdCommentsCommentIdLikeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -247,13 +255,14 @@ export interface FileRoutesByTo {
   '/quiz/$quizId/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
-  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRoute
+  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRouteWithChildren
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
   '/api/quiz/$quizId/update': typeof ApiQuizQuizIdUpdateRoute
   '/api/user/$userId/bookmarks': typeof ApiUserUserIdBookmarksRoute
   '/api/user/$userId/profile': typeof ApiUserUserIdProfileRoute
+  '/api/quiz/$quizId/comments/$commentId/like': typeof ApiQuizQuizIdCommentsCommentIdLikeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -280,13 +289,14 @@ export interface FileRoutesById {
   '/quiz/$quizId_/edit': typeof QuizQuizIdEditRoute
   '/quiz/$quizId_/take': typeof QuizQuizIdTakeRoute
   '/api/quiz/$quizId/bookmark': typeof ApiQuizQuizIdBookmarkRoute
-  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRoute
+  '/api/quiz/$quizId/comments': typeof ApiQuizQuizIdCommentsRouteWithChildren
   '/api/quiz/$quizId/delete': typeof ApiQuizQuizIdDeleteRoute
   '/api/quiz/$quizId/submit': typeof ApiQuizQuizIdSubmitRoute
   '/api/quiz/$quizId/take': typeof ApiQuizQuizIdTakeRoute
   '/api/quiz/$quizId/update': typeof ApiQuizQuizIdUpdateRoute
   '/api/user/$userId/bookmarks': typeof ApiUserUserIdBookmarksRoute
   '/api/user/$userId/profile': typeof ApiUserUserIdProfileRoute
+  '/api/quiz/$quizId/comments/$commentId/like': typeof ApiQuizQuizIdCommentsCommentIdLikeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -321,6 +331,7 @@ export interface FileRouteTypes {
     | '/api/quiz/$quizId/update'
     | '/api/user/$userId/bookmarks'
     | '/api/user/$userId/profile'
+    | '/api/quiz/$quizId/comments/$commentId/like'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -353,6 +364,7 @@ export interface FileRouteTypes {
     | '/api/quiz/$quizId/update'
     | '/api/user/$userId/bookmarks'
     | '/api/user/$userId/profile'
+    | '/api/quiz/$quizId/comments/$commentId/like'
   id:
     | '__root__'
     | '/'
@@ -385,6 +397,7 @@ export interface FileRouteTypes {
     | '/api/quiz/$quizId/update'
     | '/api/user/$userId/bookmarks'
     | '/api/user/$userId/profile'
+    | '/api/quiz/$quizId/comments/$commentId/like'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -626,12 +639,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQuizQuizIdBookmarkRouteImport
       parentRoute: typeof ApiQuizQuizIdRoute
     }
+    '/api/quiz/$quizId/comments/$commentId/like': {
+      id: '/api/quiz/$quizId/comments/$commentId/like'
+      path: '/$commentId/like'
+      fullPath: '/api/quiz/$quizId/comments/$commentId/like'
+      preLoaderRoute: typeof ApiQuizQuizIdCommentsCommentIdLikeRouteImport
+      parentRoute: typeof ApiQuizQuizIdCommentsRoute
+    }
   }
 }
 
+interface ApiQuizQuizIdCommentsRouteChildren {
+  ApiQuizQuizIdCommentsCommentIdLikeRoute: typeof ApiQuizQuizIdCommentsCommentIdLikeRoute
+}
+
+const ApiQuizQuizIdCommentsRouteChildren: ApiQuizQuizIdCommentsRouteChildren = {
+  ApiQuizQuizIdCommentsCommentIdLikeRoute:
+    ApiQuizQuizIdCommentsCommentIdLikeRoute,
+}
+
+const ApiQuizQuizIdCommentsRouteWithChildren =
+  ApiQuizQuizIdCommentsRoute._addFileChildren(
+    ApiQuizQuizIdCommentsRouteChildren,
+  )
+
 interface ApiQuizQuizIdRouteChildren {
   ApiQuizQuizIdBookmarkRoute: typeof ApiQuizQuizIdBookmarkRoute
-  ApiQuizQuizIdCommentsRoute: typeof ApiQuizQuizIdCommentsRoute
+  ApiQuizQuizIdCommentsRoute: typeof ApiQuizQuizIdCommentsRouteWithChildren
   ApiQuizQuizIdDeleteRoute: typeof ApiQuizQuizIdDeleteRoute
   ApiQuizQuizIdSubmitRoute: typeof ApiQuizQuizIdSubmitRoute
   ApiQuizQuizIdTakeRoute: typeof ApiQuizQuizIdTakeRoute
@@ -640,7 +674,7 @@ interface ApiQuizQuizIdRouteChildren {
 
 const ApiQuizQuizIdRouteChildren: ApiQuizQuizIdRouteChildren = {
   ApiQuizQuizIdBookmarkRoute: ApiQuizQuizIdBookmarkRoute,
-  ApiQuizQuizIdCommentsRoute: ApiQuizQuizIdCommentsRoute,
+  ApiQuizQuizIdCommentsRoute: ApiQuizQuizIdCommentsRouteWithChildren,
   ApiQuizQuizIdDeleteRoute: ApiQuizQuizIdDeleteRoute,
   ApiQuizQuizIdSubmitRoute: ApiQuizQuizIdSubmitRoute,
   ApiQuizQuizIdTakeRoute: ApiQuizQuizIdTakeRoute,
